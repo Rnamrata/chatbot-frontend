@@ -1,0 +1,44 @@
+<div class="scroller" #scroller>
+  <section class="conversation" aria-label="Conversation">
+    @if (messages().length) {
+      <app-message-list [messages]="messages()" (retry)="retry($event)" />
+    } @else {
+      @switch (state()) {
+        @case ('loading') {
+          <p class="note">Loading this chat…</p>
+        }
+        @case ('missing') {
+          <div class="note-card" role="status">
+            <strong>This chat is no longer on the chat server</strong>
+            <span>llm-chatbot keeps chats in memory, so they are gone after it restarts.</span>
+            <a routerLink="/chat">Start a new chat</a>
+          </div>
+        }
+        @case ('error') {
+          <div class="note-card" role="alert">
+            <strong>Couldn't load this chat</strong>
+            <span>Check that the chat server is running, then try again.</span>
+            <button type="button" class="again" (click)="reload()">Try again</button>
+          </div>
+        }
+        @default {
+          <app-welcome [problem]="problem()" [firstRun]="firstRun()" (checkAgain)="checkAgain()" />
+        }
+      }
+    }
+  </section>
+</div>
+
+<div class="dock">
+  @if (suggestions().length) {
+    <app-suggested-questions [questions]="suggestions()" (pick)="useSuggestion($event)" />
+  }
+  <app-composer
+    [(draft)]="draft"
+    [disabled]="!canType()"
+    [busy]="busy()"
+    [placeholder]="placeholder()"
+    (send)="ask($event)"
+  />
+  <p class="hint">Runs on your local Ollama model. Enter to send, Shift + Enter for a new line.</p>
+</div>

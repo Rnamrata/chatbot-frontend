@@ -1,0 +1,165 @@
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- Your questions ---------- */
+.user {
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  max-width: 75%;
+}
+
+.bubble {
+  padding: 12px 16px;
+  border-radius: 16px 16px 6px 16px;
+  background: var(--user-bubble);
+  color: var(--user-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.time {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------- Lens's answers ---------- */
+.answer {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.copy:hover {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+
+/* ---------- Searching… ---------- */
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+}
+
+.dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: dot 1.2s ease-in-out infinite;
+}
+
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------- Failed answer ---------- */
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--danger-bg);
+  box-shadow: inset 4px 0 0 var(--danger-bar);
+  color: var(--ink);
+}
+
+.error-icon {
+  color: var(--danger);
+}
+
+.error-text {
+  flex: 1 1 240px;
+}
+
+.retry {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 767.98px) {
+  .user {
+    max-width: 88%;
+  }
+
+  .answer app-lens-avatar {
+    display: none;
+  }
+}
