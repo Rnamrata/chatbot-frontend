@@ -1,1 +1,166 @@
-/* You can add global styles to this file, and also import other style files */
+/* ---------- Design tokens (Direction A – Refined navy) ---------- */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f6f8fc;
+  --surface: #ffffff;
+  --surface-2: #eff3fb;
+  --border: #e3e8f3;
+  --border-strong: #ccd6e8;
+  --ink: #13203a;
+  --ink-2: #3a4766;
+  --muted: #5a6785;
+  --primary: #2c5bd6;
+  --on-primary: #ffffff;
+  --primary-text: #2349b8;
+  --primary-soft: #e8eefb;
+  --avatar-bg: #e8eefb;
+  --mark: #fff1b8;
+  --side-bg: #13254f;
+  --side-ink: #ffffff;
+  --side-muted: #a9b9dd;
+  --side-active: #24386a;
+  --side-card: #1b2e5e;
+  --side-border: #2a3d70;
+  --ok: #22c55e;
+  --bad: #f87171;
+  --danger: #b42318;
+  --danger-bg: #fdecec;
+  --danger-bar: #e5484d;
+  --code-chip: #e3e8f1;
+  --accent: #ffd27a;
+  --user-bubble: #e8eefb;
+  --user-ink: #13203a;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b1222;
+  --surface: #121b2f;
+  --surface-2: #18233b;
+  --border: #222e48;
+  --border-strong: #33415f;
+  --ink: #e7edf8;
+  --ink-2: #c5d0e4;
+  --muted: #98a6bf;
+  --primary: #3b6bf0;
+  --on-primary: #ffffff;
+  --primary-text: #93b4ff;
+  --primary-soft: #1a2950;
+  --avatar-bg: #1d2c50;
+  --mark: #4a3b0c;
+  --side-bg: #0a1020;
+  --side-ink: #e7edf8;
+  --side-muted: #98a6bf;
+  --side-active: #1a2540;
+  --side-card: #111a2e;
+  --side-border: #1c2742;
+  --ok: #4ade80;
+  --bad: #f87171;
+  --danger: #ff9b94;
+  --danger-bg: #3b1618;
+  --danger-bar: #e5484d;
+  --code-chip: #24314c;
+  --accent: #ffd27a;
+  --user-bubble: #1d2c50;
+  --user-ink: #e7edf8;
+}
+
+:root {
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --shadow-sm: 0 1px 2px rgb(19 37 79 / 0.16);
+  --sidebar-w: 272px;
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/22px var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+a {
+  color: var(--primary-text);
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+button,
+a,
+summary {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* ---------- Shared bits ---------- */
+.icon-btn {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--ink);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

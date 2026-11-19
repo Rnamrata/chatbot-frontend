@@ -1,0 +1,43 @@
+<div class="shell">
+  @if (layout.sidebarOpen()) {
+    <app-sidebar id="main-nav" class="sidebar" [class.drawer]="layout.isMobile()" />
+    @if (layout.isMobile()) {
+      <button type="button" class="backdrop" aria-label="Close menu" (click)="layout.close()"></button>
+    }
+  }
+
+  <div class="main">
+    <header class="topbar">
+      <div class="title-group">
+        <button
+          type="button"
+          class="icon-btn"
+          aria-controls="main-nav"
+          [class.bare]="layout.isMobile()"
+          [attr.aria-expanded]="layout.sidebarOpen()"
+          [attr.aria-label]="layout.sidebarOpen() ? 'Hide sidebar' : 'Show sidebar'"
+          (click)="layout.toggle()"
+        >
+          <app-icon [name]="layout.isMobile() ? 'menu' : 'panel'" />
+        </button>
+        <div class="titles">
+          <h1 class="title">{{ header.title() }}</h1>
+          @if (header.subtitle(); as subtitle) {
+            <p class="subtitle">{{ subtitle }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="actions">
+        @if (mode(); as mode) {
+          <app-mode-switch [mode]="mode" [compact]="layout.isMobile()" />
+        }
+        <app-theme-toggle />
+      </div>
+    </header>
+
+    <main class="page">
+      <router-outlet />
+    </main>
+  </div>
+</div>
