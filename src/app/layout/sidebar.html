@@ -1,0 +1,37 @@
+<nav aria-label="Main" class="sidebar">
+  <div class="brand">
+    <app-lens-logo [size]="40" />
+    <div class="brand-text">
+      <span class="brand-name">Lens</span>
+      <span class="brand-tag">Ask docs. Review code.</span>
+    </div>
+  </div>
+
+  <a routerLink="/chat" class="new-chat">
+    <app-icon name="plus" />
+    New chat
+  </a>
+
+  <ul class="links">
+    <li>
+      <a routerLink="/history" routerLinkActive="active" ariaCurrentWhenActive="page" class="link">
+        <app-icon name="history" />
+        History
+      </a>
+    </li>
+    <li>
+      <a routerLink="/sources" routerLinkActive="active" ariaCurrentWhenActive="page" class="link">
+        <app-icon name="folder" />
+        Sources
+      </a>
+    </li>
+  </ul>
+
+  <section class="recent" aria-labelledby="recent-heading">
+    <h2 id="recent-heading" class="label">Recent</h2>
+    <!-- Phase 5 fills this from the session list. -->
+    <p class="recent-empty">Your chats and reviews will show up here.</p>
+  </section>
+
+  <app-connection-status class="status" />
+</nav>

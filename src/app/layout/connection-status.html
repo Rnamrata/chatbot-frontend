@@ -1,0 +1,29 @@
+<ng-template #rowList>
+  <ul class="rows">
+    @for (row of rows(); track row.name) {
+      <li class="row">
+        <span class="dot" [class]="row.state" aria-hidden="true"></span>
+        <span class="grow">{{ row.name }}</span>
+        <span class="detail">{{ row.detail }}</span>
+      </li>
+    }
+  </ul>
+</ng-template>
+
+@if (collapsed()) {
+  <details class="card">
+    <summary class="summary">
+      <span class="dot" [class]="status.checking() ? 'checking' : 'up'" aria-hidden="true"></span>
+      <span class="grow">{{ status.checking() ? 'Checking connections…' : 'All connected' }}</span>
+      <app-icon name="chevronDown" [size]="16" class="chev" />
+    </summary>
+    <ng-container [ngTemplateOutlet]="rowList" />
+  </details>
+} @else {
+  <section class="card open" aria-labelledby="connections-heading">
+    <h2 id="connections-heading" class="heading">Connections</h2>
+    <ng-container [ngTemplateOutlet]="rowList" />
+  </section>
+}
+
+<p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
