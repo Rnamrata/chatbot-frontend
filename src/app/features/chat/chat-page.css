@@ -1,0 +1,88 @@
+/* The page fills the shell's content area: messages scroll, the composer stays put. */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.conversation,
+.dock {
+  width: 100%;
+  max-width: 840px;
+  margin: 0 auto;
+}
+
+.conversation {
+  padding: 28px 28px 8px;
+}
+
+.dock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 28px 22px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.note {
+  padding: 40px 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.note-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 520px;
+  margin: 40px auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.note-card strong {
+  color: var(--ink);
+}
+
+.again {
+  height: 40px;
+  margin-top: 4px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 767.98px) {
+  .conversation {
+    padding: 16px 16px 8px;
+  }
+
+  .dock {
+    padding: 8px 16px 12px;
+  }
+
+  .hint {
+    display: none;
+  }
+}

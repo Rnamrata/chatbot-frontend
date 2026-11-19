@@ -1,0 +1,67 @@
+<ol class="messages">
+  @for (m of messages(); track m.id) {
+    @if (m.role === 'user') {
+      <li class="user">
+        <div class="bubble">{{ m.text }}</div>
+        @if (m.at) {
+          <time class="time" [attr.datetime]="m.at.toISOString()">{{ m.at | date: 'shortTime' }}</time>
+        }
+      </li>
+    } @else {
+      <li class="answer">
+        <app-lens-avatar [thinking]="m.status === 'pending'" />
+        <div class="body">
+          @switch (m.status) {
+            @case ('pending') {
+              <p class="thinking">
+                <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                Searching your sources…
+              </p>
+            }
+            @case ('error') {
+              <div class="error">
+                <app-icon name="alert" class="error-icon" />
+                <span class="error-text">{{ m.error }}</span>
+                @if (m.question) {
+                  <button type="button" class="retry" (click)="retry.emit(m.id)">Try again</button>
+                }
+              </div>
+            }
+            @default {
+              <app-markdown-answer [text]="m.text" />
+              <div class="meta">
+                @if (m.sources.length) {
+                  <app-source-chips
+                    [sources]="m.sources"
+                    [openN]="openN(m)"
+                    [panelId]="'passage-' + m.id"
+                    (toggleSource)="toggle(m.id, $event)"
+                  />
+                }
+                <span class="tools">
+                  <button
+                    type="button"
+                    class="copy"
+                    [attr.aria-label]="copied() === m.id ? 'Answer copied' : 'Copy answer'"
+                    (click)="copy(m)"
+                  >
+                    <app-icon [name]="copied() === m.id ? 'check' : 'copy'" [size]="15" />
+                    {{ copied() === m.id ? 'Copied' : 'Copy' }}
+                  </button>
+                  @if (m.at) {
+                    <time class="time" [attr.datetime]="m.at.toISOString()">{{ m.at | date: 'shortTime' }}</time>
+                  }
+                </span>
+              </div>
+              @if (openSource(m); as source) {
+                <app-source-passage [attr.id]="'passage-' + m.id" [source]="source" (closed)="open.set(null)" />
+              }
+            }
+          }
+        </div>
+      </li>
+    }
+  }
+</ol>
+
+<p class="visually-hidden" aria-live="polite">{{ live() }}</p>

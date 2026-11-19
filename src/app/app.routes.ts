@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
-// Phase 1: every screen is a placeholder. Phases 2–5 swap in the real page components.
+// Phases 3–5 swap the remaining placeholders for real pages.
+const chatPage = () => import('./features/chat/chat-page').then((m) => m.ChatPage);
 const placeholder = () =>
   import('./features/placeholder-page').then((m) => m.PlaceholderPage);
 
@@ -9,14 +10,12 @@ export const routes: Routes = [
   {
     path: 'chat',
     title: 'New chat · Lens',
-    loadComponent: placeholder,
-    data: { heading: 'New chat', phase: 'phase 2' },
+    loadComponent: chatPage,
   },
   {
     path: 'chat/:sessionId',
     title: 'Chat · Lens',
-    loadComponent: placeholder,
-    data: { heading: 'Chat', phase: 'phase 2' },
+    loadComponent: chatPage,
   },
   {
     path: 'review',
