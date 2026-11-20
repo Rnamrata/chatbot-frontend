@@ -31,6 +31,11 @@
   --accent: #ffd27a;
   --user-bubble: #e8eefb;
   --user-ink: #13203a;
+  --drop-border: #a9bde8;
+  --ready: #146c34;
+  --ready-bg: #e3f5ea;
+  --busy: #7a5600;
+  --busy-bg: #fff4d1;
 }
 
 :root[data-theme='dark'] {
@@ -64,6 +69,11 @@
   --accent: #ffd27a;
   --user-bubble: #1d2c50;
   --user-ink: #e7edf8;
+  --drop-border: #3f5a94;
+  --ready: #6ee7a0;
+  --ready-bg: #12301f;
+  --busy: #f3cf62;
+  --busy-bg: #352b0e;
 }
 
 :root {

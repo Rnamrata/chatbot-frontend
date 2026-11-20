@@ -1,59 +1,128 @@
-# ChatbotFrontend
+# Lens
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.7.
+Lens is the frontend for two local AI services: ask questions about your own documents (**Document Q&A**) and get an automated review of a code file (**Code Review**). Everything runs on your computer with Ollama, so your files stay with you.
 
-## Development server
+It is an Angular 22 app that talks to:
 
-To start a local development server, run:
+- [llm-chatbot](https://github.com/Rnamrata/llm-chatbot), a Flask server on `:5001` that does retrieval-augmented answers with Ollama and Chroma, and
+- [code-review-backend](https://github.com/Rnamrata/code-review-backend), a Node service on `:4000` that runs ESLint, Ruff, Java rules and an LLM reviewer.
 
-```bash
-ng serve
+```
+Angular (Lens, :4200)
+   │  HTTP, JSON + multipart
+   ▼
+llm-chatbot / Flask (:5001) ── Ollama (llama3.2 + nomic-embed-text)
+   │                    └──── Chroma vector store (chunks, reviews, findings)
+   ▼
+code-review-backend / Node (:4000)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+The browser only ever calls Flask; Flask forwards reviews to the Node service.
 
-## Code scaffolding
+## Status
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+| Phase | Scope | State |
+|---|---|---|
+| 1. Foundation | Theme tokens, light and dark themes, shell, routing, mode switch, connection status | Done |
+| 2. Document Q&A | Chat, markdown answers, sources and passage panel, welcome and offline states | Done |
+| 3. Sources | Add files, YouTube videos and web pages; sources table | Next |
+| 4. Code review | Start screen, code viewer, findings, Ask Lens | Planned |
+| 5. History | Search, filters, pin and delete, sidebar Recent | Planned |
+| 6. Phone and polish | Mobile layout, empty states, accessibility | Planned |
+| 7. Testing | Component tests, full run against both backends | Planned |
 
-```bash
-ng generate component component-name
+Screens not built yet show a placeholder page.
+
+## Prerequisites
+
+- **Node.js 24 (LTS).** Angular 22 supports Node 22, 24 and 26+. Odd-numbered versions such as 25 print `EBADENGINE` warnings. With nvm: `nvm install 24 && nvm alias default 24`.
+- **Ollama** with the two models Lens uses:
+
+  ```bash
+  ollama pull llama3.2
+  ```
+
+  ```bash
+  ollama pull nomic-embed-text
+  ```
+
+- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs.
+
+## Running everything
+
+Start the services in this order, each in its own terminal.
+
+1. **Ollama.** If the Ollama app is open, it is already running; `ollama serve` then reports `address already in use`, which is fine.
+
+   ```bash
+   ollama serve
+   ```
+
+2. **llm-chatbot** on `:5001`. Use the project's virtual environment, not a global or Anaconda Python, which won't have its packages.
+
+   ```bash
+   cd ../llm-chatbot && source .venv/bin/activate && python main.py
+   ```
+
+3. **code-review-backend** on `:4000`. Only Code Review needs it; Document Q&A works without it.
+
+   ```bash
+   cd ../code-review-backend && npm run dev
+   ```
+
+4. **Lens** on `:4200`.
+
+   ```bash
+   npm install
+   ```
+
+   ```bash
+   npm start
+   ```
+
+Open http://localhost:4200. The sidebar footer shows "All connected" when all three services are up, or a Connections card naming the one that is down.
+
+Lens must run on port 4200: llm-chatbot only accepts requests from `http://localhost:4200` (its `CORS_ORIGINS` setting). The Flask address is set in `src/app/core/api.ts`.
+
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm start` | Dev server at http://localhost:4200 with live reload |
+| `npm run build` | Production build into `dist/` |
+| `npm test` | Unit tests with Vitest, in watch mode (press `q` to quit) |
+| `npx ng test --watch=false` | Run the tests once |
+
+## Project structure
+
+```
+src/app/
+  core/       API_BASE_URL, theme, layout, page header, review state, connection status (polls /health)
+  shared/     Icon set, Lens logo, Lens avatar
+  layout/     App shell, sidebar, mode switch, theme toggle, connection status card
+  features/
+    chat/     Document Q&A: page, service, messages, markdown answers, sources, composer, welcome
+    placeholder-page.ts   Stand-in for screens from later phases
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Conventions:
 
-```bash
-ng generate --help
-```
+- Standalone components, signals for state (no store library), zoneless change detection and lazy-loaded routes.
+- File names follow the Angular 22 scaffold: `sidebar.ts`, not `sidebar.component.ts`.
+- Colours, fonts and radii are CSS custom properties in `src/styles.css`, with light and dark values. Use the tokens instead of raw colours.
+- Each feature keeps its own service (`ChatService` now; `UploadService` and `ReviewService` later).
 
-## Building
+## Design
 
-To build the project run:
+The UI follows the "Chatbot & Code Review UI" design canvas, Direction A ("Refined navy"): navy sidebar, blue only for the main action and current selection, Space Grotesk headings, Inter body text and JetBrains Mono for code. Every screen has light and dark versions, and under 768 px the sidebar becomes a drawer.
 
-```bash
-ng build
-```
+## Known limitations
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+These come from what llm-chatbot returns today, not from the frontend:
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **Citations** are numbered source chips under each answer. The design puts them inside the text, but answers carry no citation markers.
+- **Source passages** show the first 200 characters of the matching chunk without a highlight, because Flask sends no match position or page number.
+- **Suggested questions** are three fixed starters on an empty chat. Lens shows the server's suggestions once `/chat` returns `suggested_questions`.
+- **Chats live in Flask's memory.** They are lost when llm-chatbot restarts, and reloaded chats come back without their sources.
+- **Document chats can cite code reviews,** because document mode searches the whole vector store, including stored code-review chunks.
+- **Old vector data:** documents stored by an earlier llm-chatbot version have no metadata and are effectively unsearchable. If answers only cite code-review files or "Unknown source", re-add your documents.

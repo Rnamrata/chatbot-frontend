@@ -1,0 +1,83 @@
+@if (lib.lastAdded(); as added) {
+  <div class="banner" role="status">
+    <app-icon name="checkCircle" [size]="20" class="ok" />
+    <span class="grow">
+      <strong>{{ added.name }} is ready.</strong>
+      Lens split it into {{ added.chunks }} {{ added.chunks === 1 ? 'section' : 'sections' }} it can search.
+    </span>
+    <a routerLink="/chat">Ask about it</a>
+    <button type="button" class="close" aria-label="Dismiss" (click)="lib.dismissAdded()">
+      <app-icon name="close" [size]="16" />
+    </button>
+  </div>
+}
+
+<div class="cards">
+  <app-file-drop [busy]="busy('file')" [error]="error('file')" (picked)="addFile($event)" />
+
+  <app-url-form
+    kind="youtube"
+    fieldId="yt"
+    heading="YouTube video"
+    text="We download the audio and turn it into text you can ask about."
+    label="Video link"
+    placeholder="https://www.youtube.com/watch?v=…"
+    action="Add video"
+    busyText="Transcribing the video…"
+    note="Long videos can take a few minutes. You can keep chatting meanwhile."
+    [busy]="busy('youtube')"
+    [error]="error('youtube')"
+    (submitted)="addYouTube($event)"
+  />
+
+  <app-url-form
+    kind="web"
+    fieldId="web"
+    heading="Web page"
+    text="We read the page's text, such as a Wikipedia article."
+    label="Page link"
+    placeholder="https://en.wikipedia.org/wiki/…"
+    action="Add page"
+    busyText="Reading the page…"
+    [busy]="busy('web')"
+    [error]="error('web')"
+    (submitted)="addWebPage($event)"
+  />
+</div>
+
+<section class="library" aria-labelledby="library-heading">
+  <h2 id="library-heading">Your sources</h2>
+
+  @if (lib.removeError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @switch (lib.loadState()) {
+    @case ('error') {
+      <div class="empty" role="alert">
+        <strong>Couldn't load your sources</strong>
+        <span>Check that the chat server is running on :5001.</span>
+        <button type="button" class="again" (click)="lib.load()">Try again</button>
+      </div>
+    }
+    @case ('ready') {
+      @if (lib.sources().length) {
+        <app-sources-table [sources]="lib.sources()" [removing]="lib.removing()" (remove)="lib.remove($event)" />
+        @if (hasLegacy()) {
+          <p class="legacy">
+            <strong>Outdated:</strong> this data was stored by an earlier version of llm-chatbot, without names, so
+            Lens can't search it well. Remove it, then add those files and pages again.
+          </p>
+        }
+      } @else {
+        <div class="empty">
+          <strong>No sources yet</strong>
+          <span>Add a file, a YouTube video or a web page above. Lens answers questions only from what you add here.</span>
+        </div>
+      }
+    }
+    @default {
+      <p class="loading">Loading your sources…</p>
+    }
+  }
+</section>
