@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
-
-// Phases 3–5 swap the remaining placeholders for real pages.
 const chatPage = () => import('./features/chat/chat-page').then((m) => m.ChatPage);
+const sourcesPage = () => import('./features/sources/sources-page').then((m) => m.SourcesPage);
 const placeholder = () =>
   import('./features/placeholder-page').then((m) => m.PlaceholderPage);
 
@@ -32,12 +31,7 @@ export const routes: Routes = [
   {
     path: 'sources',
     title: 'Sources · Lens',
-    loadComponent: placeholder,
-    data: {
-      heading: 'Sources',
-      subtitle: 'Everything you add here can be used to answer questions in any chat.',
-      phase: 'phase 3',
-    },
+    loadComponent: sourcesPage,
   },
   {
     path: 'history',
