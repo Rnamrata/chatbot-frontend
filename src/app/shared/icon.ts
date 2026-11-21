@@ -28,6 +28,10 @@ const ICONS = {
   checkCircle: ['M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z', 'm8 12 3 3 5-6'],
   spinner: ['M21 12a9 9 0 1 1-6.2-8.6'],
   trash: ['M3 6h18', 'M8 6V4h8v2', 'M19 6l-1 14H6L5 6', 'M10 11v6M14 11v6'],
+  warning: ['M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z', 'M12 9v4M12 17v.5'],
+  idea: ['M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z'],
+  arrowRight: ['M5 12h14M13 6l6 6-6 6'],
+  unfold: ['m7 15 5 5 5-5M7 9l5-5 5 5'],
 } satisfies Record<string, string[]>;
 
 export type IconName = keyof typeof ICONS;

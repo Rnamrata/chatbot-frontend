@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 const chatPage = () => import('./features/chat/chat-page').then((m) => m.ChatPage);
 const sourcesPage = () => import('./features/sources/sources-page').then((m) => m.SourcesPage);
+const reviewStart = () => import('./features/review/review-start').then((m) => m.ReviewStart);
+const reviewPage = () => import('./features/review/review-page').then((m) => m.ReviewPage);
 const placeholder = () =>
   import('./features/placeholder-page').then((m) => m.PlaceholderPage);
 
@@ -19,14 +21,12 @@ export const routes: Routes = [
   {
     path: 'review',
     title: 'New code review · Lens',
-    loadComponent: placeholder,
-    data: { heading: 'New code review', phase: 'phase 4' },
+    loadComponent: reviewStart,
   },
   {
     path: 'review/:reviewId',
     title: 'Code review · Lens',
-    loadComponent: placeholder,
-    data: { heading: 'Code review', phase: 'phase 4' },
+    loadComponent: reviewPage,
   },
   {
     path: 'sources',

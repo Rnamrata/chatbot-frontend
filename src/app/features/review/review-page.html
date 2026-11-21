@@ -1,0 +1,216 @@
+<!-- ---------- In progress, or stopped waiting ---------- -->
+@if (view() === 'running' || view() === 'stopped') {
+  @if (job(); as j) {
+    <section class="status" aria-label="Review status" aria-live="polite">
+      <div class="status-row">
+        <app-lens-avatar [thinking]="!j.stopped" />
+        <div class="status-text">
+          @if (j.stopped) {
+            <strong>Stopped waiting</strong>
+            <span>
+              The review keeps running on your computer.
+              @if (j.status === 'done') {
+                It has finished now.
+              } @else {
+                If it finishes while this tab is open, you can open it here.
+              }
+            </span>
+          } @else if (slow()) {
+            <strong>Still reviewing {{ j.filename }}…</strong>
+            <span>
+              Taking longer than usual. The AI reviewer stops at 40 seconds; if it does, you still get a result, with a
+              note about what was skipped.
+            </span>
+          } @else {
+            <strong>Reviewing {{ j.filename }}…</strong>
+            <span>The AI reviewer is reading all {{ jobLines() }} lines. It has up to 40 seconds.</span>
+          }
+        </div>
+        <span class="clock" role="timer" [attr.aria-label]="'Time elapsed ' + clock()">{{ clock() }}</span>
+        @if (!j.stopped) {
+          <button type="button" class="plain" (click)="stop()">Stop waiting</button>
+        } @else {
+          <span class="actions">
+            <a routerLink="/review" class="plain">Review another file</a>
+            @if (j.status === 'done') {
+              <button type="button" class="primary" (click)="openResult()">Open the result</button>
+            }
+          </span>
+        }
+      </div>
+      @if (!j.stopped) {
+        <div class="progress" role="progressbar" aria-label="Review in progress"><div></div></div>
+        <div class="chips">
+          <span class="chip live"><span class="dot" aria-hidden="true"></span>AI reviewer · up to 40 s</span>
+          <span class="chip">{{ jobLinter() ?? 'No linter for Java' }}</span>
+          <span class="together">All findings arrive together</span>
+        </div>
+      }
+    </section>
+
+    <div class="panels">
+      <app-code-viewer
+        class="code"
+        [code]="j.code"
+        [language]="j.language"
+        [caption]="jobLines() + ' lines'"
+        note="Shown while the review runs"
+      />
+      <section class="side" aria-label="Findings and questions">
+        <div class="tabs" role="tablist" aria-label="Review panel">
+          <button type="button" role="tab" aria-selected="true" class="on">Findings <span class="count">…</span></button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-disabled="true"
+            class="off"
+            title="Available when the review is done"
+          >
+            Ask Lens
+          </button>
+        </div>
+        <div class="panel waiting">
+          <span class="muted">
+            {{ j.stopped ? 'No findings yet. You stopped waiting at ' + clock() + '.' : 'Findings will appear here.' }}
+          </span>
+          @if (!j.stopped) {
+            @for (width of skeletons; track $index) {
+              <div class="skeleton" aria-hidden="true">
+                <div class="skel-row">
+                  <div class="skel" style="width: 52px"></div>
+                  <div class="skel" style="width: 140px"></div>
+                </div>
+                <div class="skel" [style.width.%]="width"></div>
+              </div>
+            }
+          }
+          <p class="tip">
+            <app-icon name="idea" [size]="16" class="idea" />
+            <span>
+              @if (j.stopped) {
+                Nothing is lost: llm-chatbot saves the review when it finishes, even after you stop waiting.
+              } @else {
+                You can switch to Document Q&amp;A while you wait. The review keeps running in this tab.
+              }
+            </span>
+          </p>
+        </div>
+      </section>
+    </div>
+  }
+} @else {
+  @switch (view()) {
+    <!-- ---------- Finished ---------- -->
+    @case ('ready') {
+      @if (review(); as r) {
+        @if (r.warning || r.warnings.length) {
+          <app-review-warning
+            [warnings]="r.warnings"
+            [failure]="r.warning"
+            [ranWith]="ranWith()"
+            [canRetry]="canRetry()"
+            (retry)="runAgain()"
+          />
+        }
+
+        <section class="summary" aria-label="Summary">
+          <app-lens-avatar />
+          <p>
+            <strong>{{ summary().lead }}</strong>
+            {{ summary().rest }}
+          </p>
+          <app-severity-filter [findings]="r.findings" [(selected)]="tone" />
+          <a routerLink="/review" class="plain">
+            <app-icon name="plus" [size]="16" />
+            New review
+          </a>
+        </section>
+
+        <div class="panels">
+          <app-code-viewer
+            class="code"
+            [code]="r.code"
+            [language]="r.language"
+            [findings]="r.findings"
+            [shown]="shownFindings()"
+            [selectedLine]="selectedLine()"
+            [caption]="caption()"
+          />
+
+          <section class="side" aria-label="Findings and questions">
+            <div class="tabs" role="tablist" aria-label="Review panel">
+              <button
+                type="button"
+                role="tab"
+                id="tab-findings"
+                aria-controls="panel-findings"
+                [attr.aria-selected]="tab() === 'findings'"
+                [class.on]="tab() === 'findings'"
+                (click)="tab.set('findings')"
+              >
+                Findings <span class="count">{{ shown().length }}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="tab-ask"
+                aria-controls="panel-ask"
+                [attr.aria-selected]="tab() === 'ask'"
+                [class.on]="tab() === 'ask'"
+                (click)="tab.set('ask')"
+              >
+                Ask Lens
+              </button>
+            </div>
+
+            @if (tab() === 'findings') {
+              <app-finding-list
+                id="panel-findings"
+                role="tabpanel"
+                aria-labelledby="tab-findings"
+                class="panel"
+                [findings]="shown()"
+                [selected]="selected()"
+                [title]="listTitle()"
+                [emptyText]="emptyText()"
+                (selectFinding)="selected.set($event)"
+                (ask)="askAbout($event)"
+              />
+            } @else {
+              <app-ask-lens
+                id="panel-ask"
+                role="tabpanel"
+                aria-labelledby="tab-ask"
+                class="panel ask"
+                [sessionId]="r.session_id"
+                [reviewId]="r.review_id"
+                [line]="selectedLine()"
+                [(draft)]="draft"
+              />
+            }
+          </section>
+        </div>
+      }
+    }
+
+    <!-- ---------- A stored review that can't be shown ---------- -->
+    @case ('missing') {
+      <div class="note-card" role="status">
+        <strong>This review isn't stored any more</strong>
+        <span>It may have been cleared with its chat. Review the file again to see its findings.</span>
+        <a routerLink="/review">Start a new review</a>
+      </div>
+    }
+    @case ('error') {
+      <div class="note-card" role="alert">
+        <strong>Couldn't load this review</strong>
+        <span>{{ loadError() }}</span>
+        <button type="button" class="plain" (click)="reload()">Try again</button>
+      </div>
+    }
+    @default {
+      <p class="loading">Loading the review…</p>
+    }
+  }
+}

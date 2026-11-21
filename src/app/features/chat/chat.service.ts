@@ -22,6 +22,7 @@ interface Entry {
   messages: WritableSignal<Message[]>;
   state: WritableSignal<ConversationState>;
   view: Conversation;
+  reviewId?: string;
 }
 
 /** Ollama on a laptop can be slow, especially on the first question while the model loads. */
@@ -71,8 +72,9 @@ export class ChatService {
       });
   }
 
-  send(sessionId: string, question: string): void {
+  send(sessionId: string, question: string, reviewId?: string): void {
     const c = this.entry(sessionId);
+    if (reviewId) c.reviewId = reviewId;
     const answer = message('assistant', '', { status: 'pending', question });
     c.state.set('ready');
     c.messages.update((list) => [...list, message('user', question, { at: new Date() }), answer]);
@@ -96,7 +98,11 @@ export class ChatService {
 
   private ask(c: Entry, sessionId: string, messageId: string, question: string): void {
     this.http
-      .post<ChatResponse>(`${this.baseUrl}/chat`, { question, session_id: sessionId })
+      .post<ChatResponse>(`${this.baseUrl}/chat`, {
+        question,
+        session_id: sessionId,
+        ...(c.reviewId ? { review_id: c.reviewId } : {}),
+      })
       .pipe(timeout(ANSWER_TIMEOUT_MS))
       .subscribe({
         next: (res) =>

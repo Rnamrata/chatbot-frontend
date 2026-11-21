@@ -1,5 +1,7 @@
 # Lens
 
+[![CI](https://github.com/Rnamrata/chatbot-frontend/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Rnamrata/chatbot-frontend/actions/workflows/ci.yml)
+
 Lens is the frontend for two local AI services: ask questions about your own documents (**Document Q&A**) and get an automated review of a code file (**Code Review**). Everything runs on your computer with Ollama, so your files stay with you.
 
 It is an Angular 22 app that talks to:
@@ -25,8 +27,8 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 |---|---|---|
 | 1. Foundation | Theme tokens, light and dark themes, shell, routing, mode switch, connection status | Done |
 | 2. Document Q&A | Chat, markdown answers, sources and passage panel, welcome and offline states | Done |
-| 3. Sources | Add files, YouTube videos and web pages; sources table | Next |
-| 4. Code review | Start screen, code viewer, findings, Ask Lens | Planned |
+| 3. Sources | Add files, YouTube videos and web pages; sources table, remove, old-data cleanup | Done |
+| 4. Code review | Start screen, code viewer, findings, Ask Lens | In progress |
 | 5. History | Search, filters, pin and delete, sidebar Recent | Planned |
 | 6. Phone and polish | Mobile layout, empty states, accessibility | Planned |
 | 7. Testing | Component tests, full run against both backends | Planned |
@@ -46,7 +48,7 @@ Screens not built yet show a placeholder page.
   ollama pull nomic-embed-text
   ```
 
-- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs.
+- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (merged in llm-chatbot PR #6).
 
 ## Running everything
 
@@ -93,6 +95,14 @@ Lens must run on port 4200: llm-chatbot only accepts requests from `http://local
 | `npm test` | Unit tests with Vitest, in watch mode (press `q` to quit) |
 | `npx ng test --watch=false` | Run the tests once |
 
+## Continuous integration
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on every pull request into `master` and every push to `master`. On Node 24 it runs `npm ci`, `npm run build` and the tests once. Run the same checks locally before opening a pull request:
+
+```bash
+npm ci && npm run build && npx ng test --watch=false
+```
+
 ## Project structure
 
 ```
@@ -102,7 +112,9 @@ src/app/
   layout/     App shell, sidebar, mode switch, theme toggle, connection status card
   features/
     chat/     Document Q&A: page, service, messages, markdown answers, sources, composer, welcome
+    sources/  Sources: page, service, file drop, link forms, sources table
     placeholder-page.ts   Stand-in for screens from later phases
+.github/workflows/ci.yml   CI: install, build and test
 ```
 
 Conventions:
@@ -110,7 +122,7 @@ Conventions:
 - Standalone components, signals for state (no store library), zoneless change detection and lazy-loaded routes.
 - File names follow the Angular 22 scaffold: `sidebar.ts`, not `sidebar.component.ts`.
 - Colours, fonts and radii are CSS custom properties in `src/styles.css`, with light and dark values. Use the tokens instead of raw colours.
-- Each feature keeps its own service (`ChatService` now; `UploadService` and `ReviewService` later).
+- Each feature keeps its own service (`ChatService`, `SourcesService`; `ReviewService` in Phase 4).
 
 ## Design
 
@@ -125,4 +137,5 @@ These come from what llm-chatbot returns today, not from the frontend:
 - **Suggested questions** are three fixed starters on an empty chat. Lens shows the server's suggestions once `/chat` returns `suggested_questions`.
 - **Chats live in Flask's memory.** They are lost when llm-chatbot restarts, and reloaded chats come back without their sources.
 - **Document chats can cite code reviews,** because document mode searches the whole vector store, including stored code-review chunks.
-- **Old vector data:** documents stored by an earlier llm-chatbot version have no metadata and are effectively unsearchable. If answers only cite code-review files or "Unknown source", re-add your documents.
+- **Old vector data:** chunks stored by an earlier llm-chatbot version have no type and are effectively unsearchable. They show on the Sources screen as "Older data without details · Outdated". If answers only cite code-review files or "Unknown source", remove that row and add your documents again.
+- **Adding the same file or link twice** stores it twice. Removing a source removes it from search; the uploaded file stays in llm-chatbot's `uploads/` folder.
