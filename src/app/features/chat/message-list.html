@@ -9,13 +9,13 @@
       </li>
     } @else {
       <li class="answer">
-        <app-lens-avatar [thinking]="m.status === 'pending'" />
+        <app-lens-avatar [size]="avatarSize()" [thinking]="m.status === 'pending'" />
         <div class="body">
           @switch (m.status) {
             @case ('pending') {
               <p class="thinking">
                 <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
-                Searching your sources…
+                {{ pendingText() }}
               </p>
             }
             @case ('error') {
@@ -30,7 +30,7 @@
             @default {
               <app-markdown-answer [text]="m.text" />
               <div class="meta">
-                @if (m.sources.length) {
+                @if (showSources() && m.sources.length) {
                   <app-source-chips
                     [sources]="m.sources"
                     [openN]="openN(m)"

@@ -1,0 +1,55 @@
+<div class="intro">
+  <app-lens-avatar [size]="48" />
+  <div>
+    <h2>What should I review?</h2>
+    <p>Pick one code file. I'll check it for bugs, security problems and messy code, then you can ask me about it.</p>
+  </div>
+</div>
+
+@if (error(); as e) {
+  <div class="banner" role="alert" [class.warn]="e.kind === 'rate-limited' || e.kind === 'unsupported'">
+    <app-icon [name]="e.kind === 'rate-limited' || e.kind === 'unsupported' ? 'warning' : 'alert'" [size]="20" class="icon" />
+    <div class="text">
+      <strong>{{ e.title }}</strong>
+      <span>{{ errorBody() }}</span>
+      @if (e.kind === 'unreachable' && serviceDown()) {
+        <span><button type="button" class="again" (click)="tryAgain()">Try again</button></span>
+      }
+    </div>
+  </div>
+}
+
+<input
+  #picker
+  id="code-file"
+  type="file"
+  class="visually-hidden"
+  [accept]="accept"
+  [disabled]="blocked()"
+  (change)="pick(picker.files); picker.value = ''"
+/>
+<label
+  for="code-file"
+  class="drop"
+  [class.over]="dragging()"
+  [class.blocked]="blocked()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="dragging.set(false)"
+  (drop)="onDrop($event)"
+>
+  <span class="tile" aria-hidden="true"><app-icon name="code" [size]="26" /></span>
+  <span class="big"><strong>Choose a code file</strong> or drop it here</span>
+  <span class="hint">One file, up to 1 MB</span>
+  <span class="button" [class.off]="blocked()">{{ buttonLabel() }}</span>
+</label>
+
+<div class="languages">
+  <div class="lang"><strong>Python</strong><span>.py · Ruff + AI reviewer</span></div>
+  <div class="lang"><strong>JavaScript</strong><span>.js .jsx · ESLint + AI reviewer</span></div>
+  <div class="lang"><strong>TypeScript</strong><span>.ts .tsx · ESLint + AI reviewer</span></div>
+  <div class="lang"><strong>Java</strong><span>.java · AI reviewer only</span></div>
+</div>
+
+<p class="note">
+  The review service never runs your code. Lens keeps the file and its findings so you can ask about them later.
+</p>

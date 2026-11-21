@@ -15,6 +15,9 @@ import { SourcePassage } from './source-passage';
 })
 export class MessageList {
   readonly messages = input.required<Message[]>();
+  readonly showSources = input(true);
+  readonly avatarSize = input(40);
+  readonly pendingText = input('Searching your sources…');
   readonly retry = output<string>();
 
   /** One passage panel open at a time, as in the design. */
@@ -25,7 +28,7 @@ export class MessageList {
   protected readonly live = computed(() => {
     const last = this.messages().at(-1);
     if (last?.role !== 'assistant') return '';
-    if (last.status === 'pending') return 'Lens is searching your sources';
+        if (last.status === 'pending') return `Lens is working: ${this.pendingText()}`;
     if (last.status === 'error') return last.error ?? 'Lens could not answer';
     return 'Lens answered';
   });
