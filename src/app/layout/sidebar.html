@@ -30,7 +30,17 @@
   <section class="recent" aria-labelledby="recent-heading">
     <h2 id="recent-heading" class="label">Recent</h2>
     <!-- Phase 5 fills this from the session list. -->
-    <p class="recent-empty">Your chats and reviews will show up here.</p>
+    @for (item of recent(); track item.id) {
+      <a [routerLink]="item.link" routerLinkActive="active" ariaCurrentWhenActive="page" class="recent-item">
+        <app-icon [name]="item.icon" [size]="16" [class.pin]="item.pinned" />
+        <span class="recent-text">
+          <span class="recent-title">{{ item.title }}</span>
+          <span class="recent-when">{{ item.when }}</span>
+        </span>
+      </a>
+    } @empty {
+      <p class="recent-empty">Your chats and reviews will show up here.</p>
+    }
   </section>
 
   <app-connection-status class="status" />

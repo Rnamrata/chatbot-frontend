@@ -32,6 +32,7 @@ const ICONS = {
   idea: ['M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z'],
   arrowRight: ['M5 12h14M13 6l6 6-6 6'],
   unfold: ['m7 15 5 5 5-5M7 9l5-5 5 5'],
+  search: ['M18 11a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z', 'm20 20-3.5-3.5'],
 } satisfies Record<string, string[]>;
 
 export type IconName = keyof typeof ICONS;

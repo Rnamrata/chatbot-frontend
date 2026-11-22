@@ -108,6 +108,47 @@
   color: var(--side-muted);
 }
 
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--side-ink);
+  text-decoration: none;
+}
+
+.recent-item:hover {
+  background: rgb(255 255 255 / 0.06);
+  color: var(--side-ink);
+}
+
+.recent-item.active {
+  background: var(--side-active);
+}
+
+.recent-item .pin {
+  color: #9cc2ff;
+}
+
+.recent-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.recent-title {
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.recent-when {
+  font-size: 12px;
+  color: var(--side-muted);
+}
+
 .status {
   margin-top: auto;
 }

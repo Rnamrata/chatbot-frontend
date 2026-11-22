@@ -3,8 +3,7 @@ const chatPage = () => import('./features/chat/chat-page').then((m) => m.ChatPag
 const sourcesPage = () => import('./features/sources/sources-page').then((m) => m.SourcesPage);
 const reviewStart = () => import('./features/review/review-start').then((m) => m.ReviewStart);
 const reviewPage = () => import('./features/review/review-page').then((m) => m.ReviewPage);
-const placeholder = () =>
-  import('./features/placeholder-page').then((m) => m.PlaceholderPage);
+const historyPage = () => import('./features/history/history-page').then((m) => m.HistoryPage);
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'chat' },
@@ -36,12 +35,7 @@ export const routes: Routes = [
   {
     path: 'history',
     title: 'History · Lens',
-    loadComponent: placeholder,
-    data: {
-      heading: 'History',
-      subtitle: 'Every chat and code review, newest first.',
-      phase: 'phase 5',
-    },
+    loadComponent: historyPage,
   },
   { path: '**', redirectTo: 'chat' },
 ];

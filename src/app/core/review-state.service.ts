@@ -15,7 +15,19 @@ export class ReviewStateService {
       // storage blocked: kept in memory only
     }
   }
+
+  /** After the review is deleted, the Code Review switch starts a new one instead. */
+  forget(reviewId: string): void {
+    if (this.lastReviewId() !== reviewId) return;
+    this.lastReviewId.set(null);
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // storage blocked
+    }
+  }
 }
+
 
 function read(): string | null {
   try {

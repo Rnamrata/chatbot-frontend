@@ -27,7 +27,7 @@ export interface Message {
   error?: string;
 }
 
-/** idle: not loaded yet · missing: Flask doesn't know this session (it keeps sessions in memory). */
+/** idle: not loaded yet · missing: Flask doesn't know this session (deleted, or from before it saved chats). */
 export type ConversationState = 'idle' | 'loading' | 'ready' | 'missing' | 'error';
 
 // ---------- Flask response shapes ----------
@@ -51,9 +51,9 @@ export interface ChatResponse {
   suggested_questions?: string[];
 }
 
-/** GET /chat/history/:id. Pairs only: sources are not stored. */
+/** GET /chat/history/:id. Older llm-chatbot versions send no sources. */
 export interface HistoryResponse {
-  history: { question: string | null; answer: string; timestamp?: string }[];
+  history: { question: string | null; answer: string; timestamp?: string; sources?: RawSource[] }[];
   length: number;
   message?: string;
 }
