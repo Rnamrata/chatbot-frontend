@@ -31,7 +31,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 | 4. Code review | Start screen, in-progress view, code viewer with folding, findings, severity filter, Ask Lens | Done |
 | 5. History | Search, type filter, date groups, pin and delete, clear old chats, sidebar Recent | Done |
 | 6. Phone and polish | Phone layouts (drawer, Sources chooser, findings first), keyboard and screen reader fixes, contrast check in light and dark | Done |
-| 7. Testing | Component tests, full run against both backends | Planned |
+| 7. Testing | Component tests, full run against both backends | In progress |
 
 
 ## Prerequisites
