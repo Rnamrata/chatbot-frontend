@@ -31,7 +31,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 | 4. Code review | Start screen, in-progress view, code viewer with folding, findings, severity filter, Ask Lens | Done |
 | 5. History | Search, type filter, date groups, pin and delete, clear old chats, sidebar Recent | Done |
 | 6. Phone and polish | Phone layouts (drawer, Sources chooser, findings first), keyboard and screen reader fixes, contrast check in light and dark | Done |
-| 7. Testing | Component tests, full run against both backends | In progress |
+| 7. Testing | Component tests for every screen, smoke test against llm-chatbot, the review service and Ollama | Done |
 
 
 ## Prerequisites
@@ -93,6 +93,25 @@ Lens must run on port 4200: llm-chatbot only accepts requests from `http://local
 | `npm run build` | Production build into `dist/` |
 | `npm test` | Unit tests with Vitest, in watch mode (press `q` to quit) |
 | `npx ng test --watch=false` | Run the tests once |
+| `npm run smoke` | Full run against the running services (see Testing) |
+
+## Testing
+
+**Component and service tests** (`npx ng test --watch=false`) need no servers. Each screen is rendered with Angular's `TestBed`, with HTTP answered by `HttpTestingController` and the connection status faked (`src/app/testing/test-helpers.ts`). They cover:
+
+- Chat: the composer (Enter, Shift + Enter, when Send is off), the message list (sources, passages, pending and failed answers), the page (first question, starter questions, no sources, Ollama down)
+- Sources: link checks, the link forms, the file drop, the sources table (labels, remove)
+- Code review: the start screen (unsupported files, upload, service down), the review page (summary, filter, findings, Ask Lens, partial and missing reviews), the code viewer, severity filter and warning banner
+- History: groups, search, filters, pin, delete, clear old chats, empty state
+- Layout: the drawer and skip link, the connection card, the mode switch, theme and status services
+
+**Smoke test** (`npm run smoke`) is the full run against the real services. Start Ollama, llm-chatbot and code-review-backend first, then:
+
+```bash
+npm run smoke
+```
+
+It makes the same calls Lens makes, in order: health, add a text file to Sources, ask about it, a follow-up, History (listing, pin, reload), a code review with its reload and an Ask Lens question, a refused `.go` file, then deletes everything it added. It takes a minute or two, as the answers come from Ollama. A failed step is marked ✗ and makes the run fail; checks on what the model wrote are marked ⚠ only, since its wording varies. Use `npm run smoke -- --keep` to keep the test source and chats, or `--base <url>` for another chat server.
 
 ## Continuous integration
 
@@ -114,6 +133,8 @@ src/app/
     sources/  Sources: page, service, file drop, link forms, sources table
     review/   Code review: start screen, review page, code viewer, findings, severity filter, Ask Lens, service
     history/  History: page, service, date groups, search, pin and delete; also feeds the sidebar's Recent
+  testing/    Test helpers: a fake connection status, typing into fields, finding buttons by text
+scripts/smoke.mjs          Smoke test: full run against llm-chatbot, the review service and Ollama
 .github/workflows/ci.yml   CI: install, build and test
 ```
 
