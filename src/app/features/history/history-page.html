@@ -1,0 +1,135 @@
+<div class="tools">
+  <div class="search">
+    <app-icon name="search" />
+    <label for="history-search" class="visually-hidden">Search history</label>
+    <input
+      #search
+      id="history-search"
+      type="search"
+      placeholder="Search chats and reviews"
+      autocomplete="off"
+      [value]="query()"
+      (input)="setQuery(search.value)"
+    />
+  </div>
+  <div class="filters" role="group" aria-label="Filter by type">
+    @for (f of filters; track f.value) {
+      <button type="button" [class.on]="filter() === f.value" [attr.aria-pressed]="filter() === f.value" (click)="filter.set(f.value)">
+        {{ f.label }}
+      </button>
+    }
+  </div>
+  <button
+    type="button"
+    class="plain"
+    [disabled]="!oldCount() || busy()"
+    [title]="oldCount() ? '' : 'Nothing older than 24 hours, apart from pinned chats'"
+    (click)="askClear()"
+  >
+    <app-icon name="trash" [size]="16" />
+    Clear chats older than 24 h
+  </button>
+</div>
+
+@if (confirmClear()) {
+  <div class="confirm clear-confirm" role="group" aria-label="Confirm clearing old chats">
+    <span>
+      <strong>Delete {{ oldCount() }} {{ oldCount() === 1 ? 'chat' : 'chats' }} not used in the last 24 hours?</strong>
+      Pinned chats stay. Reviews lose their stored code and findings. This can't be undone.
+    </span>
+    <span class="actions">
+      <button type="button" class="danger" [disabled]="busy()" (click)="clearOld()">Delete {{ oldCount() }}</button>
+      <button type="button" class="plain" (click)="cancel()">Cancel</button>
+    </span>
+  </div>
+}
+
+@if (history.problem(); as problem) {
+  <p class="problem" role="alert">
+    <app-icon name="alert" [size]="18" />
+    {{ problem }}
+  </p>
+}
+<p class="visually-hidden" role="status">{{ announcement() }}</p>
+
+@switch (view()) {
+  @case ('list') {
+    @for (g of groups(); track g.label) {
+      <section class="group" [attr.aria-labelledby]="'group-' + $index">
+        <h2 [id]="'group-' + $index">{{ g.label }}</h2>
+        <ul class="rows">
+          @for (item of g.items; track item.id) {
+            <li class="row">
+              <span class="tile" [class.code]="item.kind === 'code'" aria-hidden="true">
+                <app-icon [name]="item.kind === 'code' ? 'code' : 'doc'" />
+              </span>
+              <span class="text">
+                <a class="title" [routerLink]="item.link">{{ item.title }}</a>
+                @if (item.preview) {
+                  <span class="preview">{{ item.preview }}</span>
+                }
+                <span class="meta">{{ item.meta }}</span>
+              </span>
+              <span class="time">{{ item.time }}</span>
+              <button
+                type="button"
+                class="icon"
+                [class.pinned]="item.pinned"
+                [attr.aria-label]="(item.pinned ? 'Unpin ' : 'Pin ') + item.title"
+                [attr.aria-pressed]="item.pinned"
+                (click)="togglePin(item)"
+              >
+                <app-icon name="pin" />
+              </button>
+              <button type="button" class="icon" [attr.aria-label]="'Delete ' + item.title" (click)="askDelete(item)">
+                <app-icon name="trash" />
+              </button>
+
+              @if (confirming() === item.id) {
+                <div class="confirm" role="group" [attr.aria-label]="'Confirm deleting ' + item.title">
+                  <span>
+                    @if (item.kind === 'code') {
+                      <strong>Delete this review?</strong> Its stored code, findings and questions go too.
+                    } @else {
+                      <strong>Delete this chat?</strong> Your sources stay; only the conversation goes.
+                    }
+                  </span>
+                  <span class="actions">
+                    <button type="button" class="danger" [disabled]="busy()" (click)="delete(item)">Delete</button>
+                    <button type="button" class="plain" (click)="cancel()">Cancel</button>
+                  </span>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    } @empty {
+      <p class="no-match">{{ noMatch() }}</p>
+    }
+  }
+
+  @case ('empty') {
+    <div class="empty">
+      <span class="empty-tile" aria-hidden="true"><app-icon name="history" [size]="26" /></span>
+      <strong>No chats yet</strong>
+      <span>Your chats and code reviews will show up here, newest first. Pin the ones you come back to.</span>
+      <span class="empty-actions">
+        <a routerLink="/chat" class="primary">Start a chat</a>
+        <a routerLink="/review" class="plain">Review a file</a>
+      </span>
+    </div>
+  }
+
+  @case ('error') {
+    <div class="empty" role="alert">
+      <strong>Couldn't load your history</strong>
+      <span>Lens can't reach the chat server on :5001. Start llm-chatbot, then try again.</span>
+      <button type="button" class="plain" (click)="retry()">Try again</button>
+    </div>
+  }
+
+  @default {
+    <p class="loading">Loading your history…</p>
+  }
+}

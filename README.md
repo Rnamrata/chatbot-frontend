@@ -28,12 +28,11 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 | 1. Foundation | Theme tokens, light and dark themes, shell, routing, mode switch, connection status | Done |
 | 2. Document Q&A | Chat, markdown answers, sources and passage panel, welcome and offline states | Done |
 | 3. Sources | Add files, YouTube videos and web pages; sources table, remove, old-data cleanup | Done |
-| 4. Code review | Start screen, code viewer, findings, Ask Lens | In progress |
-| 5. History | Search, filters, pin and delete, sidebar Recent | Planned |
+| 4. Code review | Start screen, in-progress view, code viewer with folding, findings, severity filter, Ask Lens | Done |
+| 5. History | Search, type filter, date groups, pin and delete, clear old chats, sidebar Recent | Done |
 | 6. Phone and polish | Mobile layout, empty states, accessibility | Planned |
 | 7. Testing | Component tests, full run against both backends | Planned |
 
-Screens not built yet show a placeholder page.
 
 ## Prerequisites
 
@@ -48,7 +47,7 @@ Screens not built yet show a placeholder page.
   ollama pull nomic-embed-text
   ```
 
-- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (merged in llm-chatbot PR #6).
+- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (llm-chatbot PR #6), and Code Review needs the full review details and refusal handling (llm-chatbot PR #7), and History needs saved sessions (llm-chatbot PR #8). All three are in llm-chatbot's `master`.
 
 ## Running everything
 
@@ -107,13 +106,14 @@ npm ci && npm run build && npx ng test --watch=false
 
 ```
 src/app/
-  core/       API_BASE_URL, theme, layout, page header, review state, connection status (polls /health)
+  core/       API_BASE_URL, theme, layout, page header, review state, activity (tells History to reload), connection status (polls /health)
   shared/     Icon set, Lens logo, Lens avatar
   layout/     App shell, sidebar, mode switch, theme toggle, connection status card
   features/
     chat/     Document Q&A: page, service, messages, markdown answers, sources, composer, welcome
     sources/  Sources: page, service, file drop, link forms, sources table
-    placeholder-page.ts   Stand-in for screens from later phases
+    review/   Code review: start screen, review page, code viewer, findings, severity filter, Ask Lens, service
+    history/  History: page, service, date groups, search, pin and delete; also feeds the sidebar's Recent
 .github/workflows/ci.yml   CI: install, build and test
 ```
 
@@ -122,7 +122,7 @@ Conventions:
 - Standalone components, signals for state (no store library), zoneless change detection and lazy-loaded routes.
 - File names follow the Angular 22 scaffold: `sidebar.ts`, not `sidebar.component.ts`.
 - Colours, fonts and radii are CSS custom properties in `src/styles.css`, with light and dark values. Use the tokens instead of raw colours.
-- Each feature keeps its own service (`ChatService`, `SourcesService`; `ReviewService` in Phase 4).
+- Each feature keeps its own service (`ChatService`, `SourcesService`, `ReviewService`, `HistoryService`).
 
 ## Design
 
@@ -135,7 +135,10 @@ These come from what llm-chatbot returns today, not from the frontend:
 - **Citations** are numbered source chips under each answer. The design puts them inside the text, but answers carry no citation markers.
 - **Source passages** show the first 200 characters of the matching chunk without a highlight, because Flask sends no match position or page number.
 - **Suggested questions** are three fixed starters on an empty chat. Lens shows the server's suggestions once `/chat` returns `suggested_questions`.
-- **Chats live in Flask's memory.** They are lost when llm-chatbot restarts, and reloaded chats come back without their sources.
+- **Chats are saved by llm-chatbot** in its `data/sessions.json`, so History and open chats survive a restart, with their sources. Chats from before llm-chatbot PR #8 were only in memory and are gone.
 - **Document chats can cite code reviews,** because document mode searches the whole vector store, including stored code-review chunks.
 - **Old vector data:** chunks stored by an earlier llm-chatbot version have no type and are effectively unsearchable. They show on the Sources screen as "Older data without details · Outdated". If answers only cite code-review files or "Unknown source", remove that row and add your documents again.
 - **Adding the same file or link twice** stores it twice. Removing a source removes it from search; the uploaded file stays in llm-chatbot's `uploads/` folder.
+- **Reviews in progress live in the tab.** "Stop waiting" only stops the screen; llm-chatbot still finishes and stores the review. If you leave the page before it finishes, open it from History or Recent once it's done.
+- **"Run the review again"** only works in the tab where the file was chosen, because the browser keeps the file in memory.
+- **Reviews stored before llm-chatbot PR #7** have no category, source or suggestion on their findings, so those details don't show.

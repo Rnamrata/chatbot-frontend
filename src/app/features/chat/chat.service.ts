@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, Signal, WritableSignal, inject, signal } from '@angular/core';
 import { TimeoutError, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../core/api';
+import { ActivityService } from '../../core/activity.service';
 import {
   ChatResponse,
   ConversationState,
@@ -38,7 +39,8 @@ export class ChatService {
    * survives the navigation to /chat/:sessionId while its answer is on the way.
    */
   private readonly entries = new Map<string, Entry>();
-
+  private readonly activity = inject(ActivityService);
+  
   /** From GET /stats: false when the vector store is empty, null while unknown. */
   readonly hasSources = signal<boolean | null>(null);
 
@@ -96,6 +98,11 @@ export class ChatService {
     });
   }
 
+  /** Drops a deleted chat, so opening it again asks the server. */
+  forget(sessionId: string): void {
+    this.entries.delete(sessionId);
+  }
+
   private ask(c: Entry, sessionId: string, messageId: string, question: string): void {
     this.http
       .post<ChatResponse>(`${this.baseUrl}/chat`, {
@@ -105,19 +112,23 @@ export class ChatService {
       })
       .pipe(timeout(ANSWER_TIMEOUT_MS))
       .subscribe({
-        next: (res) =>
-          res.success
-            ? patch(c, messageId, {
-                status: 'done',
-                text: res.answer,
-                at: new Date(),
-                sources: toSources(res.sources),
-                suggestions: res.suggested_questions ?? [],
-              })
-            : patch(c, messageId, {
-                status: 'error',
-                error: res.error ? `The chat server said: ${res.error}` : 'The chat server could not answer.',
-              }),
+        next: (res) => {
+          if (!res.success) {
+            patch(c, messageId, {
+              status: 'error',
+              error: res.error ? `The chat server said: ${res.error}` : 'The chat server could not answer.',
+            });
+            return;
+          }
+          patch(c, messageId, {
+            status: 'done',
+            text: res.answer,
+            at: new Date(),
+            sources: toSources(res.sources),
+            suggestions: res.suggested_questions ?? [],
+          });
+          this.activity.changed(); // History and Recent show the new chat or its new preview
+        },
         error: (err) => patch(c, messageId, { status: 'error', error: errorText(err) }),
       });
   }
@@ -159,7 +170,7 @@ export function toSources(raw: RawSource[] = []): Source[] {
 function fromHistory(history: HistoryResponse['history']): Message[] {
   return history.flatMap((h) => {
     const at = h.timestamp ? new Date(h.timestamp) : null;
-    const answer = message('assistant', h.answer, { at, question: h.question ?? undefined });
+    const answer = message('assistant', h.answer, { at, question: h.question ?? undefined, sources: toSources(h.sources) });
     return h.question ? [message('user', h.question, { at }), answer] : [answer];
   });
 }

@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, Signal, WritableSignal, inject, signal } from '@angular/core';
 import { TimeoutError, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../core/api';
+import { ActivityService } from '../../core/activity.service';
 import { ReviewStateService } from '../../core/review-state.service';
 import {
   CODE_EXTENSIONS,
@@ -35,6 +36,7 @@ export class ReviewService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly reviewState = inject(ReviewStateService);
+  private readonly activity = inject(ActivityService);
 
   private readonly jobs = new Map<string, WritableSignal<ReviewJob>>();
   private readonly loaded = new Map<string, WritableSignal<Loaded>>();
@@ -94,6 +96,7 @@ export class ReviewService {
           this.loaded.set(review.review_id, signal<Loaded>({ state: 'ready', review }));
           this.reviewState.remember(review.review_id);
           job.update((j) => ({ ...j, status: 'done', review }));
+          this.activity.changed(); // the review shows up in History and Recent
         },
         error: (err) => job.update((j) => ({ ...j, status: 'failed', error: startErrorFrom(err, file.name) })),
       });
@@ -115,6 +118,11 @@ export class ReviewService {
       if (jobId === reviewOrJobId || job().review?.review_id === reviewOrJobId) return this.files.get(jobId) ?? null;
     }
     return null;
+  }
+
+  /** Drops a deleted review, so opening it again asks the server (and finds it gone). */
+  forget(reviewId: string): void {
+    this.loaded.delete(reviewId);
   }
 
   /** A stored review, fetched once per tab. */

@@ -68,6 +68,26 @@ describe('ChatService', () => {
     });
     expect(chat.conversation('old').messages().map((m) => m.text)).toEqual(['Review summary', 'Why?', 'Because.']);
   });
+
+  it('keeps the sources of reloaded answers, and forgets a deleted chat', () => {
+    chat.load('saved');
+    http.expectOne(`${API}/chat/history/saved`).flush({
+      history: [
+        {
+          question: 'What is RAG?',
+          answer: 'Retrieval plus generation.',
+          sources: [{ content: 'RAG combines…', metadata: { source: 'notes.pdf', type: 'file_upload' }, full_length: 12 }],
+        },
+      ],
+      length: 1,
+    });
+    expect(chat.conversation('saved').messages()[1].sources[0].name).toBe('notes.pdf');
+
+    chat.forget('saved');
+    chat.load('saved');
+    http.expectOne(`${API}/chat/history/saved`).flush({ history: [], length: 0, message: 'Session not found' });
+    expect(chat.conversation('saved').state()).toBe('missing');
+  });
 });
 
 describe('toSources', () => {
