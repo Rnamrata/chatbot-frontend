@@ -127,7 +127,7 @@
           </a>
         </section>
 
-        <div class="panels">
+        <div class="panels done">
           <app-code-viewer
             class="code"
             [code]="r.code"
@@ -171,6 +171,7 @@
                 aria-labelledby="tab-findings"
                 class="panel"
                 [findings]="shown()"
+                [code]="r.code"
                 [selected]="selected()"
                 [title]="listTitle()"
                 [emptyText]="emptyText()"

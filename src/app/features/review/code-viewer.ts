@@ -128,14 +128,20 @@ export class CodeViewer {
   });
 
   constructor() {
-    // Bring the selected finding's line into view.
+    // Bring the selected finding's line into view. Only the code box scrolls, not the
+    // page: on phones the code is below the findings and the page must not jump there.
     afterRenderEffect(() => {
       const line = this.selectedLine();
       if (line === null) return;
       untracked(() => {
-        const el = this.host.nativeElement.querySelector<HTMLElement>(`#line-${line}`);
+        const box = this.host.nativeElement.querySelector<HTMLElement>('.code');
+        const el = box?.querySelector<HTMLElement>(`#line-${line}`);
+        if (!box || !el) return;
         const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-        el?.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+        box.scrollTo({
+          top: el.offsetTop - (box.clientHeight - el.offsetHeight) / 2,
+          behavior: reduce ? 'auto' : 'smooth',
+        });
       });
     });
   }

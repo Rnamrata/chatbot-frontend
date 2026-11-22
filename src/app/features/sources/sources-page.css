@@ -50,6 +50,10 @@
   gap: 16px;
 }
 
+.picker {
+  display: none;
+}
+
 .library {
   display: flex;
   flex-direction: column;
@@ -126,5 +130,37 @@
 
   .banner {
     flex-wrap: wrap;
+  }
+
+  /* The design's phone layout: three buttons, then only the chosen way of adding. */
+  .picker {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .picker button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 6px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .picker button.on {
+    border: 2px solid var(--primary);
+    color: var(--primary-text);
+    font-weight: 600;
+  }
+
+  .cards > :not(.chosen) {
+    display: none;
   }
 }

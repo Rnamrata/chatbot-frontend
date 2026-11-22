@@ -30,6 +30,10 @@ import { Finding, sourceLabel, toneOf } from './review.models';
         </button>
         @if (f.index === selected()) {
           <div class="more">
+            @if (f.snippet) {
+              <!-- The flagged line itself, for when the code viewer is out of sight (phones, narrow windows) -->
+              <div class="snippet"><span class="n" aria-hidden="true">{{ f.finding.line }}</span><code>{{ f.snippet }}</code></div>
+            }
             @if (f.finding.suggestion) {
               <p class="tip">
                 <app-icon name="idea" [size]="16" class="idea" />
@@ -129,6 +133,26 @@ import { Finding, sourceLabel, toneOf } from './review.models';
       padding: 0 14px 14px;
       animation: fade-in 0.18s ease-out;
     }
+    .snippet {
+      display: flex;
+      overflow-x: auto;
+      padding: 8px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--code-bg);
+      font: 12px/18px var(--font-mono);
+    }
+    .snippet .n {
+      flex: 0 0 36px;
+      padding-right: 10px;
+      color: var(--line-no);
+      text-align: right;
+      user-select: none;
+    }
+    .snippet code {
+      padding-right: 10px;
+      white-space: pre;
+    }
     .tip {
       display: flex;
       gap: 8px;
@@ -179,11 +203,13 @@ import { Finding, sourceLabel, toneOf } from './review.models';
 export class FindingList {
   /** The findings to list (after the severity filter); index is the position in the full list. */
   readonly findings = input.required<{ index: number; finding: Finding }[]>();
+  readonly code = input('');
   readonly selected = input<number | null>(null);
   readonly title = input('Findings');
   readonly emptyText = input('No findings.');
   readonly selectFinding = output<number | null>();
   readonly ask = output<number>();
+  private readonly lines = computed(() => this.code().replace(/\r\n?/g, '\n').split('\n'));
 
   protected readonly items = computed(() =>
     this.findings().map(({ index, finding }) => ({
@@ -191,6 +217,7 @@ export class FindingList {
       finding,
       tone: toneOf(finding.severity),
       severity: finding.severity || 'info',
+      snippet: finding.line > 0 ? (this.lines()[finding.line - 1] ?? '').trim() : '',
       where: [finding.line > 0 ? `Line ${finding.line}` : 'Whole file', finding.category, sourceLabel(finding.source)]
         .filter(Boolean)
         .join(' · '),

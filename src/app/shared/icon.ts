@@ -33,6 +33,8 @@ const ICONS = {
   arrowRight: ['M5 12h14M13 6l6 6-6 6'],
   unfold: ['m7 15 5 5 5-5M7 9l5-5 5 5'],
   search: ['M18 11a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z', 'm20 20-3.5-3.5'],
+  video: ['M15 8a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8Z', 'm22 7-7 5 7 5V7Z'],
+  globe: ['M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z', 'M2 12h20', 'M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z'],
 } satisfies Record<string, string[]>;
 
 export type IconName = keyof typeof ICONS;

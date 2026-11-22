@@ -30,7 +30,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 | 3. Sources | Add files, YouTube videos and web pages; sources table, remove, old-data cleanup | Done |
 | 4. Code review | Start screen, in-progress view, code viewer with folding, findings, severity filter, Ask Lens | Done |
 | 5. History | Search, type filter, date groups, pin and delete, clear old chats, sidebar Recent | Done |
-| 6. Phone and polish | Mobile layout, empty states, accessibility | Planned |
+| 6. Phone and polish | Phone layouts (drawer, Sources chooser, findings first), keyboard and screen reader fixes, contrast check in light and dark | Done |
 | 7. Testing | Component tests, full run against both backends | Planned |
 
 
@@ -127,6 +127,13 @@ Conventions:
 ## Design
 
 The UI follows the "Chatbot & Code Review UI" design canvas, Direction A ("Refined navy"): navy sidebar, blue only for the main action and current selection, Space Grotesk headings, Inter body text and JetBrains Mono for code. Every screen has light and dark versions, and under 768 px the sidebar becomes a drawer.
+
+Accessibility:
+
+- A "Skip to content" link appears on the first Tab.
+- On phones the drawer works like a menu: focus moves into it, the page behind can't be reached, and Escape or Close menu puts focus back on the menu button.
+- After a navigation that leaves focus nowhere (a closed drawer, a deleted row), focus moves to the new page's title.
+- Text meets WCAG AA contrast (4.5:1) in both themes, including code on highlighted lines.
 
 ## Known limitations
 

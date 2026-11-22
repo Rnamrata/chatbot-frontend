@@ -28,6 +28,7 @@
   padding: 8px 0;
   font: 13px/22px var(--font-mono);
   color: var(--ink);
+  position: relative; /* lines measure their offset from here, for scrolling to a finding */
 }
 
 .row {

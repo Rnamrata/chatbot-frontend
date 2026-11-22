@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ago } from '../features/history/history.models';
 import { HistoryService } from '../features/history/history.service';
@@ -13,6 +13,8 @@ import { ConnectionStatus } from './connection-status';
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
+  readonly closable = input(false);
+  readonly closeMenu = output<void>();
   private readonly history = inject(HistoryService);
   private readonly now = signal(new Date());
 

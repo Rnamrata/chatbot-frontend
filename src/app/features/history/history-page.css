@@ -328,6 +328,9 @@ button:disabled {
     padding: 12px;
   }
 
+  
+  /* Phones: title and meta only, as in the design, so titles keep their width. */
+  .preview,
   .time {
     display: none;
   }

@@ -1,27 +1,33 @@
+@if (!drawer()) {
+  <a class="skip" href="#content" (click)="skipToContent($event)">Skip to content</a>
+}
+
 <div class="shell">
   @if (layout.sidebarOpen()) {
-    <app-sidebar id="main-nav" class="sidebar" [class.drawer]="layout.isMobile()" />
-    @if (layout.isMobile()) {
-      <button type="button" class="backdrop" aria-label="Close menu" (click)="layout.close()"></button>
+    <app-sidebar id="main-nav" class="sidebar" [class.drawer]="drawer()" [closable]="drawer()" (closeMenu)="closeDrawer()" />
+    @if (drawer()) {
+      <!-- Tapping beside the drawer closes it; keyboard users have Close menu and Escape. -->
+      <div class="backdrop" aria-hidden="true" (click)="closeDrawer()"></div>
     }
   }
 
-  <div class="main">
+  <div class="main" [inert]="drawer()">
     <header class="topbar">
       <div class="title-group">
         <button
+          #menuButton
           type="button"
           class="icon-btn"
           aria-controls="main-nav"
           [class.bare]="layout.isMobile()"
           [attr.aria-expanded]="layout.sidebarOpen()"
-          [attr.aria-label]="layout.sidebarOpen() ? 'Hide sidebar' : 'Show sidebar'"
-          (click)="layout.toggle()"
+          [attr.aria-label]="menuLabel()"
+          (click)="toggleMenu()"
         >
           <app-icon [name]="layout.isMobile() ? 'menu' : 'panel'" />
         </button>
         <div class="titles">
-          <h1 class="title">{{ header.title() }}</h1>
+          <h1 #title class="title" tabindex="-1">{{ header.title() }}</h1>
           @if (header.subtitle(); as subtitle) {
             <p class="subtitle">{{ subtitle }}</p>
           }
@@ -36,7 +42,7 @@
       </div>
     </header>
 
-    <main class="page">
+    <main #content id="content" class="page" tabindex="-1">
       <router-outlet />
     </main>
   </div>
