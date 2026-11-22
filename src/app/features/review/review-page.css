@@ -334,6 +334,17 @@ app-finding-list.panel {
     min-width: 0;
   }
 
+  /* Phones: findings first (each shows its line of code), then the whole file. */
+  .done .side {
+    order: -1;
+    height: auto;
+  }
+
+  .done .ask {
+    flex: none;
+    height: min(560px, 75dvh);
+  }
+  
   .together {
     margin-left: 0;
   }

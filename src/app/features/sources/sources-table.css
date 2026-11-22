@@ -3,6 +3,8 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
+  position: relative; /* keeps the hidden "Actions" label inside, so the page doesn't widen */
+  container-type: inline-size;
 }
 
 table {
@@ -133,4 +135,55 @@ button {
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--ink);
+}
+
+/* Narrow: one row per source (name, type, status, remove) instead of a table to scroll sideways. */
+@container (max-width: 520px) {
+  table {
+    min-width: 0;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    column-gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  td {
+    display: block;
+    padding: 0;
+    border: none;
+  }
+
+  .name {
+    max-width: none;
+  }
+
+  .type {
+    grid-row: 2;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  td:nth-child(3),
+  .actions {
+    grid-row: 1 / span 2;
+  }
+
+  .actions:has(.ask) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 8px;
+  }
 }

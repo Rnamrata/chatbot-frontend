@@ -5,6 +5,11 @@
       <span class="brand-name">Lens</span>
       <span class="brand-tag">Ask docs. Review code.</span>
     </div>
+    @if (closable()) {
+      <button type="button" class="close-menu" aria-label="Close menu" (click)="closeMenu.emit()">
+        <app-icon name="close" />
+      </button>
+    }
   </div>
 
   <a routerLink="/chat" class="new-chat">
@@ -29,7 +34,6 @@
 
   <section class="recent" aria-labelledby="recent-heading">
     <h2 id="recent-heading" class="label">Recent</h2>
-    <!-- Phase 5 fills this from the session list. -->
     @for (item of recent(); track item.id) {
       <a [routerLink]="item.link" routerLinkActive="active" ariaCurrentWhenActive="page" class="recent-item">
         <app-icon [name]="item.icon" [size]="16" [class.pin]="item.pinned" />

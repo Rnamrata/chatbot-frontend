@@ -12,10 +12,20 @@
   </div>
 }
 
+<div class="picker" role="group" aria-label="What to add">
+  @for (k of kinds; track k.value) {
+    <button type="button" [class.on]="adding() === k.value" [attr.aria-pressed]="adding() === k.value" (click)="adding.set(k.value)">
+      <app-icon [name]="k.icon" />
+      {{ k.label }}
+    </button>
+  }
+</div>
+
 <div class="cards">
-  <app-file-drop [busy]="busy('file')" [error]="error('file')" (picked)="addFile($event)" />
+  <app-file-drop [class.chosen]="adding() === 'file'" [busy]="busy('file')" [error]="error('file')" (picked)="addFile($event)" />
 
   <app-url-form
+    [class.chosen]="adding() === 'youtube'"
     kind="youtube"
     fieldId="yt"
     heading="YouTube video"
@@ -31,6 +41,7 @@
   />
 
   <app-url-form
+    [class.chosen]="adding() === 'web'"
     kind="web"
     fieldId="web"
     heading="Web page"

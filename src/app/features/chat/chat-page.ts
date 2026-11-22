@@ -1,5 +1,6 @@
 import {
   Component,
+  afterNextRender,
   ElementRef,
   afterRenderEffect,
   computed,
@@ -80,6 +81,10 @@ export class ChatPage {
 
   constructor() {
     this.chat.refreshStats();
+    // A new chat moves from /chat to /chat/<id> after the first question: stay in the composer.
+    if (this.router.currentNavigation()?.extras.state?.['keepFocus']) {
+      afterNextRender(() => this.composer().focus());
+    }
 
     effect(() => {
       const id = this.sessionId();
@@ -108,7 +113,7 @@ export class ChatPage {
     if (!id) {
       // Flask creates the session on the first /chat call with this id.
       id = crypto.randomUUID();
-      void this.router.navigate(['/chat', id]);
+      void this.router.navigate(['/chat', id], { state: { keepFocus: true } });
     }
     this.chat.send(id, question);
   }
