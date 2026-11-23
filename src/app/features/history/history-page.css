@@ -209,7 +209,8 @@ button:disabled {
   font-weight: 600;
   color: var(--ink);
   text-decoration: none;
-  overflow-wrap: anywhere;
+  /* Breaks between words; inside one only when it can't fit ("inventory_service.py" stays whole) */
+  overflow-wrap: break-word;
 }
 
 .title:hover {
@@ -325,10 +326,23 @@ button:disabled {
   }
 
   .row {
-    padding: 12px;
+    gap: 6px 8px;
+    padding: 12px 8px 12px 12px;
   }
 
-  
+  .tile {
+    flex-basis: 32px;
+    height: 32px;
+  }
+
+  /* At most two lines; the full title shows on hover */
+  .title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
   /* Phones: title and meta only, as in the design, so titles keep their width. */
   .preview,
   .time {
