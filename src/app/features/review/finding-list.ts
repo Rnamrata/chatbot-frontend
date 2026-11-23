@@ -25,11 +25,20 @@ import { Finding, sourceLabel, toneOf } from './review.models';
           <span class="meta">
             <span [class]="'sev ' + f.tone">{{ f.severity }}</span>
             <span class="where">{{ f.where }}</span>
+            @if (f.fromAI) {
+              <span class="ai" title="Found by the AI reviewer, which can be wrong">AI · check it</span>
+            }
           </span>
           <span class="msg">{{ f.finding.message }}</span>
         </button>
         @if (f.index === selected()) {
           <div class="more">
+            @if (f.fromAI) {
+              <p class="ai-note">
+                Found by the AI reviewer, which can misread code or point at a nearby line. Check the code before you
+                change it.
+              </p>
+            }
             @if (f.snippet) {
               <!-- The flagged line itself, for when the code viewer is out of sight (phones, narrow windows) -->
               <div class="snippet"><span class="n" aria-hidden="true">{{ f.finding.line }}</span><code>{{ f.snippet }}</code></div>
@@ -101,6 +110,19 @@ import { Finding, sourceLabel, toneOf } from './review.models';
       gap: 8px;
       font-size: 12px;
       font-weight: 600;
+    }
+    .ai {
+      padding: 0 7px;
+      border: 1px dashed var(--muted);
+      border-radius: 10px;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+    .ai-note {
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 20px;
     }
     .sev {
       padding: 1px 8px;
@@ -216,6 +238,8 @@ export class FindingList {
       index,
       finding,
       tone: toneOf(finding.severity),
+      // Linters and the secret scan are exact; the model is a second opinion
+      fromAI: finding.source === 'llm',
       severity: finding.severity || 'info',
       snippet: finding.line > 0 ? (this.lines()[finding.line - 1] ?? '').trim() : '',
       where: [finding.line > 0 ? `Line ${finding.line}` : 'Whole file', finding.category, sourceLabel(finding.source)]

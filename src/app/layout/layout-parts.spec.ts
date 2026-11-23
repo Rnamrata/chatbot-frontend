@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { ReviewStateService } from '../core/review-state.service';
 import { StatusService } from '../core/status.service';
 import { ThemeService } from '../core/theme.service';
 import { fakeStatus } from '../testing/test-helpers';
@@ -48,18 +47,12 @@ describe('ModeSwitch', () => {
     return { fixture, el: fixture.nativeElement as HTMLElement };
   }
 
-  it('sends Code Review to the start screen until there is a review, then reopens the last one', async () => {
-    const { fixture, el } = await render();
-    const reviewLink = () => el.querySelectorAll('a')[1].getAttribute('href');
-    expect(el.querySelector('a[aria-current="page"]')?.textContent).toContain('Document Q&A');
-    TestBed.inject(ReviewStateService).forget(TestBed.inject(ReviewStateService).lastReviewId() ?? '');
-    await fixture.whenStable();
-    expect(reviewLink()).toBe('/review');
+  it('always sends Code Review to the start screen for a new review, and Document Q&A to a new chat', async () => {
+    const { el } = await render();
+    const links = [...el.querySelectorAll('a')].map((a) => a.getAttribute('href'));
 
-    TestBed.inject(ReviewStateService).remember('r42');
-    await fixture.whenStable();
-    expect(reviewLink()).toBe('/review/r42');
-    TestBed.inject(ReviewStateService).forget('r42');
+    expect(el.querySelector('a[aria-current="page"]')?.textContent).toContain('Document Q&A');
+    expect(links).toEqual(['/chat', '/review']);
   });
 
   it('shows icons only, with names, on phones', async () => {

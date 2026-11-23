@@ -1,7 +1,6 @@
 import { Component, DestroyRef, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PageHeaderService } from '../../core/page-header.service';
-import { ReviewStateService } from '../../core/review-state.service';
 import { StatusService } from '../../core/status.service';
 import { Icon } from '../../shared/icon';
 import { ChatService } from '../chat/chat.service';
@@ -30,7 +29,6 @@ export class HistoryPage {
   private readonly status = inject(StatusService);
   private readonly chat = inject(ChatService);
   private readonly reviews = inject(ReviewService);
-  private readonly reviewState = inject(ReviewStateService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly search = viewChild.required<ElementRef<HTMLInputElement>>('search');
 
@@ -136,10 +134,7 @@ export class HistoryPage {
   private forget(items: HistoryItem[]): void {
     for (const item of items) {
       this.chat.forget(item.id);
-      if (item.reviewId) {
-        this.reviews.forget(item.reviewId);
-        this.reviewState.forget(item.reviewId);
-      }
+      if (item.reviewId) this.reviews.forget(item.reviewId);
     }
   }
 

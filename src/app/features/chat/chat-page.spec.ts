@@ -49,12 +49,25 @@ describe('ChatPage', () => {
     expect(el.querySelector('textarea')!.value).toBe('What are the main ideas?');
   });
 
-  it('points to Sources first when there is nothing to search', async () => {
-    const { el } = await render(0);
+  it('asks for a source first when there is nothing to search: a link to paste, or a file through +', async () => {
+    const { fixture, el } = await render(0);
+    const box = el.querySelector('textarea')!;
+    const send = el.querySelector<HTMLButtonElement>('button[aria-label=Send]')!;
 
-    expect(el.querySelector('textarea')!.disabled).toBe(true);
-    expect(el.querySelector('textarea')!.placeholder).toBe('Add a source first, then ask anything about it');
+    expect(box.disabled).toBe(false);
+    expect(box.placeholder).toBe('Paste a YouTube or web link, or press + to upload a file');
     expect(el.querySelector('app-welcome')?.textContent).toContain('1. Add a source');
+
+    box.value = 'What is this about?';
+    box.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(send.disabled).toBe(true); // nothing to answer from yet
+
+    box.value = 'What is this about? https://en.wikipedia.org/wiki/Lens';
+    box.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(send.disabled).toBe(false);
+    expect(el.querySelector('.pasted')?.textContent).toContain('Add as source when you send');
   });
 
   it('explains how to start Ollama when it is down, and checks again on request', async () => {

@@ -1,7 +1,7 @@
 <div class="scroller" #scroller>
   <section class="conversation" aria-label="Conversation">
     @if (messages().length) {
-      <app-message-list [messages]="messages()" (retry)="retry($event)" />
+      <app-message-list [messages]="messages()" (retry)="retry($event)" (retryLink)="retryLink($event)" />
     } @else {
       @switch (state()) {
         @case ('loading') {
@@ -22,7 +22,12 @@
           </div>
         }
         @default {
-          <app-welcome [problem]="problem()" [firstRun]="firstRun()" (checkAgain)="checkAgain()" />
+          <app-welcome
+            [problem]="problem()"
+            [firstRun]="firstRun()"
+            (checkAgain)="checkAgain()"
+            (addSources)="dialogOpen.set(true)"
+          />
         }
       }
     }
@@ -33,12 +38,55 @@
   @if (suggestions().length) {
     <app-suggested-questions [questions]="suggestions()" (pick)="useSuggestion($event)" />
   }
+  <app-chat-sources-bar
+    [ids]="sourceIds()"
+    [library]="library.sources()"
+    [uploads]="uploads()"
+    (remove)="removeSource($event)"
+    (add)="dialogOpen.set(true)"
+    (dismiss)="dismissUpload($event)"
+  />
+  @if (sourcesError() ?? dropProblem(); as problem) {
+    <p class="problem" role="alert">{{ problem }}</p>
+  }
+  @if (pastedLink(); as link) {
+    <div class="pasted">
+      <app-icon [name]="link.kind === 'youtube' ? 'video' : 'globe'" [size]="18" />
+      <span class="grow">
+        <strong>Add as source when you send</strong>
+        <span>{{ link.kind === 'youtube' ? 'YouTube video' : 'Web page' }} · {{ shortUrl(link.url) }}</span>
+      </span>
+      <button type="button" class="x" aria-label="Don't add the link as a source" (click)="dismissedUrl.set(link.url)">
+        <app-icon name="close" [size]="16" />
+      </button>
+    </div>
+  }
   <app-composer
     [(draft)]="draft"
     [disabled]="!canType()"
     [busy]="busy()"
+    [canSubmit]="canSubmit()"
     [placeholder]="placeholder()"
     (send)="ask($event)"
+    (addSources)="dialogOpen.set(true)"
   />
-  <p class="hint">Runs on your local Ollama model. Enter to send, Shift + Enter for a new line.</p>
+  <p class="hint">Paste a YouTube or web link to add it as a source. Enter to send, Shift + Enter for a new line.</p>
 </div>
+
+@if (dragging()) {
+  <div class="drop" aria-hidden="true">
+    <app-icon name="upload" [size]="28" />
+    <strong>Drop files to add them to this chat</strong>
+    <span>PDF, TXT or Markdown, up to 20 MB</span>
+  </div>
+}
+
+<app-add-sources-dialog
+  [open]="dialogOpen()"
+  [library]="library.sources()"
+  [chosen]="sourceIds()"
+  [uploads]="uploads()"
+  (closed)="dialogOpen.set(false)"
+  (apply)="useSources($event)"
+  (upload)="addFile($event)"
+/>

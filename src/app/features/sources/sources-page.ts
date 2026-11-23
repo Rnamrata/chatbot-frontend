@@ -1,58 +1,85 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { PageHeaderService } from '../../core/page-header.service';
-import { Icon, IconName } from '../../shared/icon';
-import { FileDrop } from './file-drop';
-import { AddKind, Job } from './sources.models';
+import { Icon } from '../../shared/icon';
+import { ChatService } from '../chat/chat.service';
 import { SourcesService } from './sources.service';
 import { SourcesTable } from './sources-table';
-import { UrlForm } from './url-form';
 
-/** On phones only one way of adding shows at a time; these buttons pick it. */
-const KINDS: { value: AddKind; label: string; icon: IconName }[] = [
-  { value: 'file', label: 'File', icon: 'upload' },
-  { value: 'youtube', label: 'YouTube', icon: 'video' },
-  { value: 'web', label: 'Web page', icon: 'globe' },
-];
-
+/** The library of everything Lens can answer from: choose sources for a chat, or delete them. */
 @Component({
   selector: 'app-sources-page',
-  imports: [FileDrop, Icon, RouterLink, SourcesTable, UrlForm],
+  imports: [Icon, RouterLink, SourcesTable],
   templateUrl: './sources-page.html',
   styleUrl: './sources-page.css',
 })
 export class SourcesPage {
   protected readonly lib = inject(SourcesService);
-  protected readonly kinds = KINDS;
-  protected readonly adding = signal<AddKind>('file');
+  private readonly chat = inject(ChatService);
+  private readonly router = inject(Router);
+
+  protected readonly query = signal('');
+  private readonly picked = signal<string[]>([]);
+  protected readonly confirmingDelete = signal(false);
+
+  protected readonly visible = computed(() => {
+    const q = this.query().trim().toLowerCase();
+    const all = this.lib.sources();
+    return q ? all.filter((s) => `${s.name} ${s.source ?? ''}`.toLowerCase().includes(q)) : all;
+  });
+  /** Chosen sources still in the library, in the library's order. */
+  protected readonly chosen = computed(() =>
+    this.lib
+      .sources()
+      .filter((s) => s.status !== 'outdated' && this.picked().includes(s.id))
+      .map((s) => s.id),
+  );
   protected readonly hasLegacy = computed(() => this.lib.sources().some((s) => s.status === 'outdated'));
+  protected readonly countLabel = computed(() => plural(this.lib.sources().length, 'source'));
+  protected readonly chosenLabel = computed(() => plural(this.chosen().length, 'source'));
 
   constructor() {
-    inject(PageHeaderService).set('Sources', 'Everything you add here can be used to answer questions in any chat.');
+    inject(PageHeaderService).set(
+      'Sources',
+      'Everything Lens can answer from. Select sources to start a chat about them; add new ones from a chat.',
+    );
     this.lib.load();
   }
 
-  protected busy(kind: AddKind): boolean {
-    return this.lib.jobs()[kind]?.status === 'busy';
+  protected toggle(id: string): void {
+    this.confirmingDelete.set(false);
+    this.picked.update((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
   }
 
-  protected error(kind: AddKind): string | null {
-    const job: Job = this.lib.jobs()[kind];
-    return job?.status === 'error' ? job.message : null;
+  /** Selects every source the search shows, or clears them when all are selected already. */
+  protected toggleAll(): void {
+    this.confirmingDelete.set(false);
+    const shown = this.visible()
+      .filter((s) => s.status !== 'outdated')
+      .map((s) => s.id);
+    const every = shown.every((id) => this.picked().includes(id));
+    this.picked.update((list) => (every ? list.filter((id) => !shown.includes(id)) : [...new Set([...list, ...shown])]));
   }
 
-  protected addFile(file: File): void {
-    this.lib.clearError('file');
-    this.lib.addFile(file);
+  protected clear(): void {
+    this.confirmingDelete.set(false);
+    this.picked.set([]);
   }
 
-  protected addYouTube(url: string): void {
-    this.lib.clearError('youtube');
-    this.lib.addYouTube(url);
+  protected deleteChosen(): void {
+    this.lib.remove(this.chosen());
+    this.clear();
   }
 
-  protected addWebPage(url: string): void {
-    this.lib.clearError('web');
-    this.lib.addWebPage(url);
+  /** A new chat that answers from the chosen sources only. */
+  protected startChat(): void {
+    const id = crypto.randomUUID();
+    this.chat.start(id);
+    this.chat.setSources(id, this.chosen());
+    void this.router.navigate(['/chat', id], { state: { keepFocus: true } });
   }
+}
+
+function plural(n: number, word: string): string {
+  return `${n.toLocaleString('en-US')} ${n === 1 ? word : `${word}s`}`;
 }

@@ -130,6 +130,7 @@ describe('ReviewPage', () => {
     expect(el.querySelector<HTMLInputElement>('#ask-review')!.value).toBe('How do I fix line 2?');
     // The summary the page already shows isn't repeated as a chat message
     expect(el.querySelector('app-ask-lens app-message-list')).toBeNull();
+    expect(el.querySelector('app-ask-lens .note')?.textContent).toContain('can be wrong. Check them against the code.');
   });
 
   it('warns when only part of the review ran', async () => {

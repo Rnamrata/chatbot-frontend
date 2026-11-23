@@ -2,43 +2,69 @@
   <table>
     <thead>
       <tr>
+        <th scope="col" class="pick">
+          <input
+            type="checkbox"
+            aria-label="Select all sources"
+            [checked]="allSelected()"
+            [indeterminate]="someSelected()"
+            [disabled]="!selectable().length"
+            (change)="toggleAll.emit()"
+          />
+        </th>
         <th scope="col">Name</th>
         <th scope="col">Type</th>
+        <th scope="col">Added</th>
         <th scope="col">Status</th>
         <th scope="col"><span class="visually-hidden">Actions</span></th>
       </tr>
     </thead>
     <tbody>
       @for (s of sources(); track s.id) {
-        <tr>
+        <tr [class.chosen]="isSelected(s.id)">
+          <td class="pick">
+            <input
+              type="checkbox"
+              [id]="'src-' + s.id"
+              [attr.aria-label]="'Select ' + s.name"
+              [checked]="isSelected(s.id)"
+              [disabled]="s.status === 'outdated'"
+              (change)="toggle.emit(s.id)"
+            />
+          </td>
           <td class="name">
-            <span class="title" [title]="s.name">{{ s.name }}</span>
+            <label class="title" [for]="'src-' + s.id" [title]="s.name">{{ s.name }}</label>
             <span class="detail">{{ detail(s) }}</span>
           </td>
-          <td class="type">{{ typeLabel(s) }}</td>
-          <td>
+          <td class="type">{{ type(s) }}</td>
+          <td class="added">{{ added(s) }}</td>
+          <td class="state">
             <span class="pill" [class]="s.status">{{ statusLabel(s) }}</span>
           </td>
           <td class="actions">
             @if (s.status !== 'processing') {
               @if (confirming() === s.id) {
                 <span class="ask">
-                  <button type="button" class="danger" (click)="confirm(s.id)">Remove</button>
+                  <button type="button" class="danger" (click)="confirm(s.id)">Delete</button>
                   <button type="button" class="plain" (click)="confirming.set(null)">Cancel</button>
                 </span>
               } @else {
                 <button
                   type="button"
                   class="icon"
-                  [disabled]="removing() === s.id"
-                  [attr.aria-label]="'Remove ' + s.name"
+                  [disabled]="removing().includes(s.id)"
+                  [attr.aria-label]="'Delete ' + s.name"
                   (click)="confirming.set(s.id)"
                 >
-                  <app-icon [name]="removing() === s.id ? 'spinner' : 'trash'" [size]="16" />
+                  <app-icon [name]="removing().includes(s.id) ? 'spinner' : 'trash'" [size]="16" />
                 </button>
               }
             }
           </td>
+        </tr>
+      } @empty {
+        <tr class="none">
+          <td colspan="6">No sources match your search.</td>
         </tr>
       }
     </tbody>
