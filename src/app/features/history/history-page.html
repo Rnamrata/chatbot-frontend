@@ -64,7 +64,7 @@
                 <app-icon [name]="item.kind === 'code' ? 'code' : 'doc'" />
               </span>
               <span class="text">
-                <a class="title" [routerLink]="item.link">{{ item.title }}</a>
+                <a class="title" [routerLink]="item.link" [title]="item.title">{{ item.title }}</a>
                 @if (item.preview) {
                   <span class="preview">{{ item.preview }}</span>
                 }

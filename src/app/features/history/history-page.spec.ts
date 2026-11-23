@@ -70,6 +70,13 @@ describe('HistoryPage', () => {
     expect(el.textContent).toContain('Code Review · Java · 2 messages');
   });
 
+  it('keeps the full title on hover, for titles cut short on phones', async () => {
+    const long = 'Summarize the main points of the prompt engineering book chapter by chapter';
+    const { el } = await render([session({ session_id: 'long', title: long })]);
+
+    expect(el.querySelector<HTMLAnchorElement>('.row .title')!.title).toBe(long);
+  });
+
   it('searches and filters by type', async () => {
     const { fixture, el } = await render();
 

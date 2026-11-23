@@ -53,7 +53,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
   ollama pull nomic-embed-text
   ```
 
-- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (llm-chatbot PR #6), and Code Review needs the full review details and refusal handling (llm-chatbot PR #7), and History needs saved sessions (llm-chatbot PR #8). A chat's own sources need llm-chatbot PR #14. All of these are in llm-chatbot's `master`.
+- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (llm-chatbot PR #6), and Code Review needs the full review details and refusal handling (llm-chatbot PR #7), and History needs saved sessions (llm-chatbot PR #8). A chat's own sources need llm-chatbot PR #14, and "Why it matters" on findings needs llm-chatbot PR #16 with code-review-backend PR #27. All of these are in each project's `master`.
 
 ## Running everything
 
@@ -71,7 +71,7 @@ Start the services in this order, each in its own terminal.
    cd ../llm-chatbot && source .venv/bin/activate && python main.py
    ```
 
-3. **code-review-backend** on `:4000`. Only Code Review needs it; Document Q&A works without it.
+3. **code-review-backend** on `:4000`. Only Code Review needs it; Document Q&A works without it. Its AI reviewer is off unless its `.env` has `LLM_ENABLED=true`. Without it, Python and TypeScript files get only the linters and the secret scan, and Java files only the secret scan, with a warning that the AI reviewer is off.
 
    ```bash
    cd ../code-review-backend && npm run dev
@@ -108,8 +108,9 @@ Lens must run on port 4200: llm-chatbot only accepts requests from `http://local
 - Chat: the composer (Enter, Shift + Enter, when Send is off), the message list (sources, passages, pending and failed answers), the page (first question, starter questions, no sources, Ollama down)
 - A chat's sources: the "Answering from" chips, the + dialog (choosing, searching, uploading), a pasted link added before its question, a link that fails and is tried again, a link kept as text, files dropped on the chat
 - Sources: the library (search, select, select all, start a chat with these, delete after asking, empty state), file and link checks, plain explanations for failed adds
-- Code review: the start screen (unsupported files, upload, service down), the review page (summary, filter, findings, Ask Lens, partial and missing reviews), the code viewer, severity filter and warning banner
-- History: groups, search, filters, pin, delete, clear old chats, empty state
+- Code review: the start screen (unsupported files, upload, service down), the review page (summary, filter, findings, Ask Lens, partial and missing reviews), findings marked as from the AI reviewer, "Why it matters" with its source link, the code viewer, severity filter and warning banner
+- Answers: markdown and code blocks, links that open in a new tab
+- History: groups, search, filters, pin, delete, clear old chats, empty state, the full title on a shortened one
 - Layout: the drawer and skip link, the connection card, the mode switch, theme and status services
 
 **Smoke test** (`npm run smoke`) is the full run against the real services. Start Ollama, llm-chatbot and code-review-backend first, then:
@@ -165,7 +166,7 @@ Accessibility:
 
 ## Known limitations
 
-These come from what llm-chatbot returns today, not from the frontend:
+Some of these come from what llm-chatbot returns today, others from Lens keeping some state only in the browser tab:
 
 - **Citations** are numbered source chips under each answer. The design puts them inside the text, but answers carry no citation markers.
 - **Source passages** show the first 200 characters of the matching chunk without a highlight, because Flask sends no match position or page number.
