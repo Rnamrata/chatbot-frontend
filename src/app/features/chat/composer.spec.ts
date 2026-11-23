@@ -34,6 +34,16 @@ describe('Composer', () => {
     expect(box.value).toBe('');
   });
 
+  it('empties the box even when Enter comes before the typed text was drawn', async () => {
+    const { fixture, sent, box } = await render();
+    typeInto(box, 'Quick question'); // no wait: Enter follows at once, as with fast typing
+    press(box);
+    await fixture.whenStable();
+
+    expect(sent).toEqual(['Quick question']);
+    expect(box.value).toBe('');
+  });
+
   it('leaves Shift + Enter to add a new line', async () => {
     const { fixture, sent, box } = await render();
     typeInto(box, 'line one');

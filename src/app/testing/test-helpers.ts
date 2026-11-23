@@ -45,3 +45,17 @@ export function byText<T extends HTMLElement = HTMLElement>(root: HTMLElement, s
 export function allowScrolling(): void {
   Element.prototype.scrollTo ??= () => undefined;
 }
+/** jsdom may not open <dialog> elements; this opens and closes them the way a browser does. */
+export function allowDialogs(): void {
+  const proto = HTMLDialogElement.prototype;
+  if (!proto.showModal || !String(proto.showModal).includes('[native code]')) {
+    proto.showModal = function (this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    };
+    proto.close = function (this: HTMLDialogElement) {
+      if (!this.hasAttribute('open')) return;
+      this.removeAttribute('open');
+      this.dispatchEvent(new Event('close'));
+    };
+  }
+}

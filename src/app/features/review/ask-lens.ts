@@ -59,6 +59,7 @@ const SUGGESTIONS = ['Which issue first?', 'Show the fixed file'];
           <app-icon name="send" />
         </button>
       </div>
+      <p class="note">Answers come from a local AI model and can be wrong. Check them against the code.</p>
     </form>
   `,
   styles: `
@@ -78,6 +79,11 @@ const SUGGESTIONS = ['Which issue first?', 'Show the fixed file'];
     .intro {
       margin: 0;
       color: var(--ink-2);
+    }
+    .note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
     }
     form {
       flex: none;
@@ -187,7 +193,7 @@ export class AskLens {
     const id = this.sessionId();
     const question = this.draft().trim();
     if (!id || !question || !this.canAsk()) return;
-    this.chat.send(id, question, this.reviewId());
+    this.chat.send(id, question, { reviewId: this.reviewId() });
     this.draft.set('');
   }
 

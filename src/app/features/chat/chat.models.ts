@@ -14,6 +14,26 @@ export interface Source {
 
 export type MessageStatus = 'done' | 'pending' | 'error';
 
+/** A file being added to a chat (picked in the + dialog, or dropped on the chat). */
+export interface FileUpload {
+  id: string;
+  name: string;
+  status: 'adding' | 'failed';
+  error?: string;
+  detail?: string;
+}
+
+/** A YouTube or web link sent with a question, added as a source before the question is asked. */
+export interface LinkSource {
+  kind: 'youtube' | 'web';
+  url: string;
+  status: 'adding' | 'failed' | 'added';
+  /** When adding started, for the elapsed time on long transcriptions. */
+  since: number;
+  error?: string;
+  detail?: string;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -25,6 +45,8 @@ export interface Message {
   sources: Source[];
   suggestions: string[];
   error?: string;
+  /** User only: a link in the question that is being added as a source first. */
+  link?: LinkSource;
 }
 
 /** idle: not loaded yet · missing: Flask doesn't know this session (deleted, or from before it saved chats). */
@@ -45,6 +67,8 @@ export interface ChatResponse {
   sources?: RawSource[];
   num_sources?: number;
   session_id: string;
+  /** The chat's own sources after this question; [] means every source. */
+  source_ids?: string[];
   message_count?: number;
   error?: string;
   /** Not sent by llm-chatbot yet; used as soon as it is. */
@@ -56,6 +80,8 @@ export interface HistoryResponse {
   history: { question: string | null; answer: string; timestamp?: string; sources?: RawSource[] }[];
   length: number;
   message?: string;
+  /** The chat's own sources; [] or missing means every source. */
+  source_ids?: string[];
 }
 
 /** GET /stats */

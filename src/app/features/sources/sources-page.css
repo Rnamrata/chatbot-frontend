@@ -1,69 +1,8 @@
 :host {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding: 24px 28px 40px;
-}
-
-.banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: var(--radius);
-  background: var(--ready-bg);
-  animation: fade-in 0.18s ease-out;
-}
-
-.ok {
-  color: var(--ready);
-}
-
-.grow {
-  flex: 1;
-  min-width: 0;
-}
-
-.banner a {
-  flex: none;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.close {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
-}
-
-.picker {
-  display: none;
-}
-
-.library {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.library h2 {
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 600;
+  padding: 24px 28px 40px;
 }
 
 .empty {
@@ -115,52 +54,125 @@
   color: var(--danger);
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
 @media (max-width: 767.98px) {
   :host {
     padding: 16px 16px 32px;
     gap: 20px;
   }
+}
 
-  .banner {
-    flex-wrap: wrap;
-  }
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
 
-  /* The design's phone layout: three buttons, then only the chosen way of adding. */
-  .picker {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
+.search {
+  flex: 1 1 280px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+}
 
-  .picker button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 12px 6px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--surface);
-    color: var(--ink);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-  }
+.search:focus-within {
+  border-color: var(--primary);
+}
 
-  .picker button.on {
-    border: 2px solid var(--primary);
-    color: var(--primary-text);
-    font-weight: 600;
-  }
+.search input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
 
-  .cards > :not(.chosen) {
-    display: none;
-  }
+.count {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 12px 14px 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--primary-soft);
+}
+
+.grow {
+  flex: 1 1 220px;
+}
+
+.strong {
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.selection button,
+.empty a.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.text {
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.plain {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.primary {
+  border: none;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.danger {
+  border: none;
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+
+.empty a.primary {
+  margin-top: 6px;
+  height: 44px;
+  padding: 0 18px;
 }

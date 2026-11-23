@@ -31,6 +31,75 @@
   color: var(--muted);
 }
 
+.bubble:has(.link) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.18);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- A link being added as a source ---------- */
+.adding,
+.failed,
+.added {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.adding {
+  background: var(--busy-bg);
+  color: var(--busy);
+}
+
+.failed {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.added {
+  align-items: center;
+  background: var(--ready-bg);
+  color: var(--ready);
+}
+
+.grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--ink);
+}
+
+.grow span,
+.grow details {
+  color: var(--ink-2);
+}
+
+.grow details {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.grow summary {
+  cursor: pointer;
+}
+
 /* ---------- Lens's answers ---------- */
 .answer {
   display: flex;

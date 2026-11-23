@@ -10,7 +10,7 @@ export interface Finding {
   severity: Severity | string;
   message: string;
   category?: string;
-  /** Which check found it: 'ruff', 'eslint' or 'llm'. */
+  /** Which check found it: 'ruff', 'eslint', 'secrets' or 'llm'. */
   source?: string;
   suggestion?: string;
 }
@@ -121,7 +121,13 @@ export function toneOf(severity: string): Tone {
   return 'low';
 }
 
-const SOURCE_LABELS: Record<string, string> = { llm: 'AI reviewer', ruff: 'Ruff', eslint: 'ESLint', orchestrator: 'Review service' };
+const SOURCE_LABELS: Record<string, string> = {
+  llm: 'AI reviewer',
+  ruff: 'Ruff',
+  eslint: 'ESLint',
+  secrets: 'Secret scan',
+  orchestrator: 'Review service',
+};
 
 export function sourceLabel(source: string | null | undefined): string {
   return (source && SOURCE_LABELS[source]) || 'A check';

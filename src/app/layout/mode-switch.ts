@@ -1,10 +1,13 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ReviewStateService } from '../core/review-state.service';
 import { Icon } from '../shared/icon';
 
 export type Mode = 'chat' | 'review';
 
+/**
+ * Document Q&A always opens a new chat, and Code Review always opens the start screen for a
+ * new review. Earlier chats and reviews are in History and the sidebar's Recent.
+ */
 @Component({
   selector: 'app-mode-switch',
   imports: [RouterLink, Icon],
@@ -23,7 +26,7 @@ export type Mode = 'chat' | 'review';
         }
       </a>
       <a
-        [routerLink]="reviewLink()"
+        routerLink="/review"
         class="opt"
         [class.on]="mode() === 'review'"
         [attr.aria-current]="mode() === 'review' ? 'page' : null"
@@ -73,12 +76,4 @@ export type Mode = 'chat' | 'review';
 export class ModeSwitch {
   readonly mode = input.required<Mode>();
   readonly compact = input(false);
-
-  private readonly reviewState = inject(ReviewStateService);
-
-  /** Code Review reopens the last review, or the start screen if there is none. */
-  protected readonly reviewLink = computed(() => {
-    const id = this.reviewState.lastReviewId();
-    return id ? ['/review', id] : ['/review'];
-  });
 }

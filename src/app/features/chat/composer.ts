@@ -1,18 +1,19 @@
 import { Component, ElementRef, afterRenderEffect, computed, input, model, output, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
 
 const MAX_HEIGHT = 200;
 
-/** Enter sends, Shift + Enter adds a line. The paperclip goes to Sources. */
+/** Enter sends, Shift + Enter adds a line. + opens "Add sources to this chat". */
 @Component({
   selector: 'app-composer',
-  imports: [Icon, RouterLink],
+  imports: [Icon],
   template: `
     <form class="box" [class.off]="disabled()" (submit)="$event.preventDefault(); submit()">
-      <a routerLink="/sources" class="attach" aria-label="Add a source">
-        <app-icon name="attach" [size]="20" />
-      </a>
+      @if (canAddSources()) {
+        <button type="button" class="attach" aria-label="Add sources" aria-haspopup="dialog" (click)="addSources.emit()">
+          <app-icon name="plus" [size]="20" />
+        </button>
+      }
       <label for="ask" class="visually-hidden">Ask a question</label>
       <textarea
         #box
@@ -57,7 +58,9 @@ const MAX_HEIGHT = 200;
       border-radius: 10px;
     }
     .attach {
+      background: transparent;
       color: var(--ink-2);
+      cursor: pointer;
     }
     .attach:hover {
       background: var(--primary-soft);
@@ -96,11 +99,18 @@ export class Composer {
   /** An answer is on its way: typing is fine, sending waits. */
   readonly busy = input(false);
   readonly placeholder = input('Ask about your documents…');
+  /** False when there is nothing to send yet (no sources and no link in the message). */
+  readonly canSubmit = input(true);
+  /** Shows the + button (document chats only). */
+  readonly canAddSources = input(true);
   readonly send = output<string>();
+  readonly addSources = output<void>();
 
   private readonly box = viewChild.required<ElementRef<HTMLTextAreaElement>>('box');
 
-  protected readonly canSend = computed(() => !this.disabled() && !this.busy() && this.draft().trim().length > 0);
+  protected readonly canSend = computed(
+    () => !this.disabled() && !this.busy() && this.canSubmit() && this.draft().trim().length > 0,
+  );
 
   constructor() {
     // Grow with the text, up to MAX_HEIGHT, then scroll. Empty: back to one row.
@@ -127,5 +137,8 @@ export class Composer {
     if (!this.canSend()) return;
     this.send.emit(this.draft().trim());
     this.draft.set('');
+    // Also empty the box itself: after fast typing, Angular may not have drawn the typed text
+    // yet, so to the [value] binding '' looks unchanged and the old text would stay.
+    this.box().nativeElement.value = '';
   }
 }

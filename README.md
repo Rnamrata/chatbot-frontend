@@ -7,13 +7,13 @@ Lens is the frontend for two local AI services: ask questions about your own doc
 It is an Angular 22 app that talks to:
 
 - [llm-chatbot](https://github.com/Rnamrata/llm-chatbot), a Flask server on `:5001` that does retrieval-augmented answers with Ollama and Chroma, and
-- [code-review-backend](https://github.com/Rnamrata/code-review-backend), a Node service on `:4000` that runs ESLint, Ruff, Java rules and an LLM reviewer.
+- [code-review-backend](https://github.com/Rnamrata/code-review-backend), a Node service on `:4000` that runs ESLint, Ruff, a secret scan and an AI reviewer with rule cards for Python, JavaScript, TypeScript and Java.
 
 ```
 Angular (Lens, :4200)
    │  HTTP, JSON + multipart
    ▼
-llm-chatbot / Flask (:5001) ── Ollama (llama3.2 + nomic-embed-text)
+llm-chatbot / Flask (:5001) ── Ollama (llama3.2, qwen2.5-coder:7b, nomic-embed-text)
    │                    └──── Chroma vector store (chunks, reviews, findings)
    ▼
 code-review-backend / Node (:4000)
@@ -32,22 +32,27 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 | 5. History | Search, type filter, date groups, pin and delete, clear old chats, sidebar Recent | Done |
 | 6. Phone and polish | Phone layouts (drawer, Sources chooser, findings first), keyboard and screen reader fixes, contrast check in light and dark | Done |
 | 7. Testing | Component tests for every screen, smoke test against llm-chatbot, the review service and Ollama | Done |
+| 8. Sources in the chat | A chat's own sources ("Answering from" chips, the + dialog, links added on send, files dropped on the chat), Sources as a library (search, select, start a chat with these, delete), plain explanations when adding fails, AI findings marked as needing a check, Code Review always opens a new review | Done |
 
 
 ## Prerequisites
 
 - **Node.js 24 (LTS).** Angular 22 supports Node 22, 24 and 26+. Odd-numbered versions such as 25 print `EBADENGINE` warnings. With nvm: `nvm install 24 && nvm alias default 24`.
-- **Ollama** with the two models Lens uses:
+- **Ollama** with the three models Lens uses: `llama3.2` for document answers, `qwen2.5-coder:7b` for code reviews and Ask Lens, and `nomic-embed-text` for search:
 
   ```bash
   ollama pull llama3.2
   ```
 
   ```bash
+  ollama pull qwen2.5-coder:7b
+  ```
+
+  ```bash
   ollama pull nomic-embed-text
   ```
 
-- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (llm-chatbot PR #6), and Code Review needs the full review details and refusal handling (llm-chatbot PR #7), and History needs saved sessions (llm-chatbot PR #8). All three are in llm-chatbot's `master`.
+- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (llm-chatbot PR #6), and Code Review needs the full review details and refusal handling (llm-chatbot PR #7), and History needs saved sessions (llm-chatbot PR #8). A chat's own sources need llm-chatbot PR #14. All of these are in llm-chatbot's `master`.
 
 ## Running everything
 
@@ -100,7 +105,8 @@ Lens must run on port 4200: llm-chatbot only accepts requests from `http://local
 **Component and service tests** (`npx ng test --watch=false`) need no servers. Each screen is rendered with Angular's `TestBed`, with HTTP answered by `HttpTestingController` and the connection status faked (`src/app/testing/test-helpers.ts`). They cover:
 
 - Chat: the composer (Enter, Shift + Enter, when Send is off), the message list (sources, passages, pending and failed answers), the page (first question, starter questions, no sources, Ollama down)
-- Sources: link checks, the link forms, the file drop, the sources table (labels, remove)
+- A chat's sources: the "Answering from" chips, the + dialog (choosing, searching, uploading), a pasted link added before its question, a link that fails and is tried again, a link kept as text, files dropped on the chat
+- Sources: the library (search, select, select all, start a chat with these, delete after asking, empty state), file and link checks, plain explanations for failed adds
 - Code review: the start screen (unsupported files, upload, service down), the review page (summary, filter, findings, Ask Lens, partial and missing reviews), the code viewer, severity filter and warning banner
 - History: groups, search, filters, pin, delete, clear old chats, empty state
 - Layout: the drawer and skip link, the connection card, the mode switch, theme and status services
@@ -125,12 +131,12 @@ npm ci && npm run build && npx ng test --watch=false
 
 ```
 src/app/
-  core/       API_BASE_URL, theme, layout, page header, review state, activity (tells History to reload), connection status (polls /health)
+  core/       API_BASE_URL, theme, layout, page header, activity (tells History to reload), connection status (polls /health)
   shared/     Icon set, Lens logo, Lens avatar
   layout/     App shell, sidebar, mode switch, theme toggle, connection status card
   features/
-    chat/     Document Q&A: page, service, messages, markdown answers, sources, composer, welcome
-    sources/  Sources: page, service, file drop, link forms, sources table
+    chat/     Document Q&A: page, service, messages, markdown answers, sources, composer, welcome, the chat's sources (chips, + dialog)
+    sources/  Sources library: page, service, table, file and link checks, explanations for failed adds
     review/   Code review: start screen, review page, code viewer, findings, severity filter, Ask Lens, service
     history/  History: page, service, date groups, search, pin and delete; also feeds the sidebar's Recent
   testing/    Test helpers: a fake connection status, typing into fields, finding buttons by text
@@ -164,9 +170,9 @@ These come from what llm-chatbot returns today, not from the frontend:
 - **Source passages** show the first 200 characters of the matching chunk without a highlight, because Flask sends no match position or page number.
 - **Suggested questions** are three fixed starters on an empty chat. Lens shows the server's suggestions once `/chat` returns `suggested_questions`.
 - **Chats are saved by llm-chatbot** in its `data/sessions.json`, so History and open chats survive a restart, with their sources. Chats from before llm-chatbot PR #8 were only in memory and are gone.
-- **Document chats can cite code reviews,** because document mode searches the whole vector store, including stored code-review chunks.
 - **Old vector data:** chunks stored by an earlier llm-chatbot version have no type and are effectively unsearchable. They show on the Sources screen as "Older data without details · Outdated". If answers only cite code-review files or "Unknown source", remove that row and add your documents again.
-- **Adding the same file or link twice** stores it twice. Removing a source removes it from search; the uploaded file stays in llm-chatbot's `uploads/` folder.
+- **Adding a source that is already there** reuses it: the same link, or the same file with the same content. To refresh a link that changed, delete it in Sources first. Deleting a source removes it from search and from every chat that used it; the uploaded file stays in llm-chatbot's `uploads/` folder.
+- **A link sent with a question** shows on that question until the page is reloaded; after that the question shows as text, and the source stays in the chat's "Answering from" list.
 - **Reviews in progress live in the tab.** "Stop waiting" only stops the screen; llm-chatbot still finishes and stores the review. If you leave the page before it finishes, open it from History or Recent once it's done.
 - **"Run the review again"** only works in the tab where the file was chosen, because the browser keeps the file in memory.
 - **Reviews stored before llm-chatbot PR #7** have no category, source or suggestion on their findings, so those details don't show.

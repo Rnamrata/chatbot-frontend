@@ -1,5 +1,4 @@
 import { Component, input, output } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
 import { LensAvatar } from '../../shared/lens-avatar';
 
@@ -9,7 +8,7 @@ export type Problem = 'server' | 'ollama' | null;
 /** The empty /chat screen. The two start cards show until the first source is added. */
 @Component({
   selector: 'app-welcome',
-  imports: [Icon, LensAvatar, RouterLink],
+  imports: [Icon, LensAvatar],
   template: `
     <div class="hero">
       <app-lens-avatar [size]="72" />
@@ -18,6 +17,9 @@ export type Problem = 'server' | 'ollama' | null;
         I answer questions using your own documents and review your code. Everything runs on your computer, so your
         files stay with you.
       </p>
+      @if (!firstRun() && !problem()) {
+        <p class="how">Ask about all your sources, or press + to choose which ones this chat should use.</p>
+      }
     </div>
 
     @if (problem()) {
@@ -47,11 +49,11 @@ export type Problem = 'server' | 'ollama' | null;
 
     @if (firstRun()) {
       <div class="cards">
-        <a class="card link" routerLink="/sources">
+        <button type="button" class="card link" aria-haspopup="dialog" (click)="addSources.emit()">
           <span class="card-icon" aria-hidden="true"><app-icon name="upload" [size]="20" /></span>
           <strong>1. Add a source</strong>
-          <span class="card-text">A PDF, text file, YouTube video or web page.</span>
-        </a>
+          <span class="card-text">Upload a PDF or text file, or paste a YouTube or web link in the message.</span>
+        </button>
         <div class="card">
           <span class="card-icon" aria-hidden="true"><app-icon name="chat" [size]="20" /></span>
           <strong>2. Ask about it</strong>
@@ -141,6 +143,15 @@ export type Problem = 'server' | 'ollama' | null;
       color: var(--ink);
       text-decoration: none;
     }
+    button.card {
+      align-items: flex-start;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .how {
+      color: var(--muted);
+    }
     .card.link:hover {
       border-color: var(--primary);
     }
@@ -164,4 +175,5 @@ export class Welcome {
   readonly problem = input<Problem>(null);
   readonly firstRun = input(false);
   readonly checkAgain = output<void>();
+  readonly addSources = output<void>();
 }

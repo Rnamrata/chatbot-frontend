@@ -9,7 +9,7 @@
 
 table {
   width: 100%;
-  min-width: 560px;
+  min-width: 680px;
   border-collapse: collapse;
   font-size: 14px;
   color: var(--ink);
@@ -50,6 +50,39 @@ tr:last-child td {
 
 .title {
   font-weight: 500;
+  cursor: pointer;
+}
+
+.pick {
+  width: 1%;
+  padding-right: 0;
+}
+
+.pick input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.pick input:disabled {
+  cursor: default;
+}
+
+tr.chosen td {
+  background: var(--primary-soft);
+}
+
+.added {
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.none td {
+  padding: 24px 16px;
+  color: var(--muted);
+  text-align: center;
 }
 
 .detail {
@@ -149,7 +182,7 @@ button {
 
   tbody tr {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: center;
     column-gap: 10px;
     padding: 12px 14px;
@@ -170,13 +203,23 @@ button {
     max-width: none;
   }
 
+  .pick {
+    grid-row: 1 / span 2;
+    padding: 0;
+  }
+
   .type {
+    grid-column: 2;
     grid-row: 2;
     font-size: 12px;
     color: var(--muted);
   }
 
-  td:nth-child(3),
+  .added {
+    display: none;
+  }
+
+  .state,
   .actions {
     grid-row: 1 / span 2;
   }

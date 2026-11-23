@@ -1,7 +1,9 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { Icon } from '../../shared/icon';
+import { addedLabel, typeLabel } from './source-checks';
 import { LibrarySource } from './sources.models';
 
+/** The library: one row per source, with a checkbox to choose sources for a chat. */
 @Component({
   selector: 'app-sources-table',
   imports: [Icon],
@@ -9,35 +11,43 @@ import { LibrarySource } from './sources.models';
   styleUrl: './sources-table.css',
 })
 export class SourcesTable {
+  /** The rows to show (after the search). */
   readonly sources = input.required<LibrarySource[]>();
-  /** Id of the source being removed. */
-  readonly removing = input<string | null>(null);
+  /** Ids of the chosen sources. */
+  readonly selected = input<string[]>([]);
+  /** Ids of the sources being deleted. */
+  readonly removing = input<string[]>([]);
+  readonly toggle = output<string>();
+  readonly toggleAll = output<void>();
   readonly remove = output<string>();
 
-  /** Row asking "Remove …?" before anything is deleted. */
+  /** Row asking "Delete …?" before anything is deleted. */
   protected readonly confirming = signal<string | null>(null);
+
+  /** Older data without names can't be chosen for a chat. */
+  protected readonly selectable = computed(() => this.sources().filter((s) => s.status !== 'outdated'));
+  protected readonly allSelected = computed(
+    () => this.selectable().length > 0 && this.selectable().every((s) => this.selected().includes(s.id)),
+  );
+  protected readonly someSelected = computed(
+    () => !this.allSelected() && this.selectable().some((s) => this.selected().includes(s.id)),
+  );
+
+  protected isSelected(id: string): boolean {
+    return this.selected().includes(id);
+  }
 
   protected confirm(id: string): void {
     this.confirming.set(null);
     this.remove.emit(id);
   }
 
-  protected typeLabel(s: LibrarySource): string {
-    switch (s.type) {
-      case 'youtube':
-        return 'YouTube';
-      case 'web':
-        return 'Web page';
-      case 'file_upload': {
-        const name = (s.source ?? s.name).toLowerCase();
-        if (name.endsWith('.pdf')) return 'PDF';
-        if (name.endsWith('.md')) return 'Markdown';
-        if (name.endsWith('.txt')) return 'Text';
-        return 'File';
-      }
-      default:
-        return '—';
-    }
+  protected type(s: LibrarySource): string {
+    return typeLabel(s.type, s.source, s.name);
+  }
+
+  protected added(s: LibrarySource): string {
+    return addedLabel(s.added_at);
   }
 
   protected statusLabel(s: LibrarySource): string {
@@ -48,7 +58,7 @@ export class SourcesTable {
 
   protected detail(s: LibrarySource): string {
     if (s.status === 'processing') return s.source ?? '';
-    const sections = `${s.chunks} ${s.chunks === 1 ? 'section' : 'sections'}`;
+    const sections = `${s.chunks.toLocaleString('en-US')} ${s.chunks === 1 ? 'section' : 'sections'}`;
     return s.type === 'web' || s.type === 'youtube' ? `${sections} · ${s.source}` : sections;
   }
 }

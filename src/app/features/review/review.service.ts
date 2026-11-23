@@ -3,7 +3,6 @@ import { Injectable, Signal, WritableSignal, inject, signal } from '@angular/cor
 import { TimeoutError, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../core/api';
 import { ActivityService } from '../../core/activity.service';
-import { ReviewStateService } from '../../core/review-state.service';
 import {
   CODE_EXTENSIONS,
   MAX_CODE_BYTES,
@@ -35,7 +34,6 @@ export type Loaded =
 export class ReviewService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
-  private readonly reviewState = inject(ReviewStateService);
   private readonly activity = inject(ActivityService);
 
   private readonly jobs = new Map<string, WritableSignal<ReviewJob>>();
@@ -94,7 +92,6 @@ export class ReviewService {
         next: (res) => {
           const review = normalize(res);
           this.loaded.set(review.review_id, signal<Loaded>({ state: 'ready', review }));
-          this.reviewState.remember(review.review_id);
           job.update((j) => ({ ...j, status: 'done', review }));
           this.activity.changed(); // the review shows up in History and Recent
         },
@@ -136,7 +133,6 @@ export class ReviewService {
     this.http.get<ReviewResponse>(`${this.baseUrl}/review/${encodeURIComponent(reviewId)}`).subscribe({
       next: (res) => {
         result.set({ state: 'ready', review: normalize(res) });
-        this.reviewState.remember(reviewId);
       },
       error: (err) =>
         result.set(
