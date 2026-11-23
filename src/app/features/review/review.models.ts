@@ -13,6 +13,19 @@ export interface Finding {
   /** Which check found it: 'ruff', 'eslint', 'secrets' or 'llm'. */
   source?: string;
   suggestion?: string;
+  /** Why this kind of problem matters, matched by the review service; not every finding has one. */
+  why?: Why;
+}
+
+/** A finding's "why" card: the reason, a fix and a page to read more. */
+export interface Why {
+  id: string;
+  title: string;
+  reason: string;
+  fix: string;
+  /** The page's name, e.g. "OWASP SQL Injection Prevention". */
+  source: string;
+  url: string;
 }
 
 /** A part of the review that had a problem while the rest ran, e.g. the AI reviewer timed out. */

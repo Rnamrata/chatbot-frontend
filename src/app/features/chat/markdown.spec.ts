@@ -13,3 +13,12 @@ describe('splitFences', () => {
     expect(splitFences('```\nx = 1')).toEqual([{ kind: 'code', text: 'x = 1', lang: '' }]);
   });
 });
+describe('inNewTab', () => {
+  it('opens web links beside Lens and leaves other links alone', async () => {
+    const { inNewTab } = await import('./markdown-answer');
+
+    expect(inNewTab('<p><a href="https://peps.python.org/">PEP 8</a> and <a href="#top">top</a></p>')).toBe(
+      '<p><a target="_blank" rel="noopener noreferrer" href="https://peps.python.org/">PEP 8</a> and <a href="#top">top</a></p>',
+    );
+  });
+});

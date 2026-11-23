@@ -33,6 +33,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 | 6. Phone and polish | Phone layouts (drawer, Sources chooser, findings first), keyboard and screen reader fixes, contrast check in light and dark | Done |
 | 7. Testing | Component tests for every screen, smoke test against llm-chatbot, the review service and Ollama | Done |
 | 8. Sources in the chat | A chat's own sources ("Answering from" chips, the + dialog, links added on send, files dropped on the chat), Sources as a library (search, select, start a chat with these, delete), plain explanations when adding fails, AI findings marked as needing a check, Code Review always opens a new review | Done |
+| 9. Explain why | An opened finding shows why it matters and a source to read (the card's fix stands in when the check gave no suggestion); Ask Lens answers end with that source; links in answers open in a new tab | Done |
 
 
 ## Prerequisites
@@ -175,4 +176,4 @@ These come from what llm-chatbot returns today, not from the frontend:
 - **A link sent with a question** shows on that question until the page is reloaded; after that the question shows as text, and the source stays in the chat's "Answering from" list.
 - **Reviews in progress live in the tab.** "Stop waiting" only stops the screen; llm-chatbot still finishes and stores the review. If you leave the page before it finishes, open it from History or Recent once it's done.
 - **"Run the review again"** only works in the tab where the file was chosen, because the browser keeps the file in memory.
-- **Reviews stored before llm-chatbot PR #7** have no category, source or suggestion on their findings, so those details don't show.
+- **Reviews stored before llm-chatbot PR #7** have no category, source or suggestion on their findings, so those details don't show. Reviews stored before llm-chatbot PR #16 have no "Why it matters" or source.
