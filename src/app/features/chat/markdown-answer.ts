@@ -3,6 +3,11 @@ import { marked } from 'marked';
 import { CodeBlock } from './code-block';
 import { splitFences } from './markdown';
 
+/** Links in an answer (sources Lens adds, pages the model names) open beside Lens, not over it. */
+export function inNewTab(html: string): string {
+  return html.replace(/<a href="(https?:)/g, '<a target="_blank" rel="noopener noreferrer" href="$1');
+}
+
 /**
  * Renders an answer's markdown. Code fences become CodeBlock components; the rest goes
  * through marked and [innerHTML], which Angular sanitizes (scripts and handlers are stripped).
@@ -80,7 +85,7 @@ export class MarkdownAnswer {
   protected readonly parts = computed(() =>
     splitFences(this.text()).map((part) => ({
       ...part,
-      html: part.kind === 'text' ? (marked.parse(part.text, { async: false, gfm: true }) as string) : '',
+      html: part.kind === 'text' ? inNewTab(marked.parse(part.text, { async: false, gfm: true }) as string) : '',
     })),
   );
 }

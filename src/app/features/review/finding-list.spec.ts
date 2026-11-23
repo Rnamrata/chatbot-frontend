@@ -50,4 +50,58 @@ describe('FindingList', () => {
     expect(el.querySelector('.where')?.textContent).toBe('Line 3 · security · Secret scan');
     expect(el.querySelector('.ai')).toBeNull();
   });
+
+  describe('why it matters', () => {
+    const WHY = {
+      id: 'sql-injection',
+      title: 'SQL built from input',
+      reason: 'One quote in a name can read, change or delete other rows.',
+      fix: 'Pass values as query parameters.',
+      source: 'OWASP SQL Injection Prevention',
+      url: 'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html',
+    };
+
+    async function open(finding: object) {
+      const fixture = TestBed.createComponent(FindingList);
+      fixture.componentRef.setInput('findings', [
+        { index: 0, finding: { file: 'a.py', line: 20, severity: 'high', message: 'SQL injection (S608)', source: 'ruff', ...finding } },
+      ]);
+      fixture.componentRef.setInput('selected', 0);
+      await fixture.whenStable();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('shows why the problem matters, with its source opening in a new tab', async () => {
+      const el = await open({ why: WHY, suggestion: 'Use cursor.execute with ? placeholders.' });
+
+      expect(el.querySelector('.tip')?.textContent).toContain('Use cursor.execute with ? placeholders.');
+      expect(el.querySelector('.why p')?.textContent).toBe('Why it matters: One quote in a name can read, change or delete other rows.');
+      const link = el.querySelector<HTMLAnchorElement>('.why a.source')!;
+      expect(link.textContent).toContain('OWASP SQL Injection Prevention');
+      expect(link.textContent).toContain('(opens in a new tab)');
+      expect(link.href).toBe(WHY.url);
+      expect(link.target).toBe('_blank');
+      expect(link.rel).toBe('noopener noreferrer');
+    });
+
+    it("uses the card's fix when the check gave no suggestion", async () => {
+      const el = await open({ why: WHY });
+
+      expect(el.querySelector('.tip')?.textContent).toContain('Pass values as query parameters.');
+    });
+
+    it('names a source without an https link but does not link it', async () => {
+      const el = await open({ why: { ...WHY, url: 'javascript:alert(1)' } });
+
+      expect(el.querySelector('.why a')).toBeNull();
+      expect(el.querySelector('.why .source')?.textContent).toBe('OWASP SQL Injection Prevention');
+    });
+
+    it('shows nothing extra for a finding without a card', async () => {
+      const el = await open({});
+
+      expect(el.querySelector('.why')).toBeNull();
+      expect(el.querySelector('.tip')).toBeNull();
+    });
+  });
 });

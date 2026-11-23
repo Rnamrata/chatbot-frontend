@@ -43,11 +43,25 @@ import { Finding, sourceLabel, toneOf } from './review.models';
               <!-- The flagged line itself, for when the code viewer is out of sight (phones, narrow windows) -->
               <div class="snippet"><span class="n" aria-hidden="true">{{ f.finding.line }}</span><code>{{ f.snippet }}</code></div>
             }
-            @if (f.finding.suggestion) {
+            @if (f.suggestion) {
               <p class="tip">
                 <app-icon name="idea" [size]="16" class="idea" />
-                <span><strong>Suggestion: </strong>{{ f.finding.suggestion }}</span>
+                <span><strong>Suggestion: </strong>{{ f.suggestion }}</span>
               </p>
+            }
+            @if (f.why; as why) {
+              <div class="why">
+                <p><strong>Why it matters: </strong>{{ why.reason }}</p>
+                @if (why.link) {
+                  <a class="source" [href]="why.link" target="_blank" rel="noopener noreferrer">
+                    {{ why.source }}
+                    <app-icon name="external" [size]="13" />
+                    <span class="visually-hidden">(opens in a new tab)</span>
+                  </a>
+                } @else if (why.source) {
+                  <span class="source">{{ why.source }}</span>
+                }
+              </div>
             }
             @if (f.finding.line > 0) {
               <button type="button" class="ask" (click)="ask.emit(f.finding.line)">
@@ -193,6 +207,42 @@ import { Finding, sourceLabel, toneOf } from './review.models';
       margin-top: 2px;
       color: var(--primary-text);
     }
+    .why {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 0 2px;
+      font-size: 13px;
+      line-height: 20px;
+      color: var(--ink-2);
+    }
+    .why p {
+      margin: 0;
+    }
+    .why strong {
+      color: var(--ink);
+    }
+    .source {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--primary-text);
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+    a.source {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
     .ask {
       align-self: flex-start;
       display: inline-flex;
@@ -241,6 +291,11 @@ export class FindingList {
       // Linters and the secret scan are exact; the model is a second opinion
       fromAI: finding.source === 'llm',
       severity: finding.severity || 'info',
+      // The reviewer's own suggestion; the card's fix when it gave none (linters don't)
+      suggestion: finding.suggestion || finding.why?.fix || '',
+      why: finding.why?.reason
+        ? { reason: finding.why.reason, source: finding.why.source, link: /^https:\/\//.test(finding.why.url ?? '') ? finding.why.url : null }
+        : null,
       snippet: finding.line > 0 ? (this.lines()[finding.line - 1] ?? '').trim() : '',
       where: [finding.line > 0 ? `Line ${finding.line}` : 'Whole file', finding.category, sourceLabel(finding.source)]
         .filter(Boolean)
