@@ -7,7 +7,7 @@ Lens is the frontend for two local AI services: ask questions about your own doc
 It is an Angular 22 app that talks to:
 
 - [llm-chatbot](https://github.com/Rnamrata/llm-chatbot), a Flask server on `:5001` that does retrieval-augmented answers with Ollama and Chroma, and
-- [code-review-backend](https://github.com/Rnamrata/code-review-backend), a Node service on `:4000` that runs ESLint, Ruff, a secret scan and an AI reviewer with rule cards for Python, JavaScript, TypeScript and Java.
+- [code-review-backend](https://github.com/Rnamrata/code-review-backend), a Node service on `:4000` that runs ESLint, Ruff, PMD, a secret scan and an AI reviewer with rule cards for Python, JavaScript, TypeScript and Java.
 
 ```
 Angular (Lens, :4200)
@@ -71,7 +71,7 @@ Start the services in this order, each in its own terminal.
    cd ../llm-chatbot && source .venv/bin/activate && python main.py
    ```
 
-3. **code-review-backend** on `:4000`. Only Code Review needs it; Document Q&A works without it. Its AI reviewer is off unless its `.env` has `LLM_ENABLED=true`. Without it, Python and TypeScript files get only the linters and the secret scan, and Java files only the secret scan, with a warning that the AI reviewer is off.
+3. **code-review-backend** on `:4000`. Only Code Review needs it; Document Q&A works without it. Java files are checked by PMD, which needs Java: `brew install pmd` brings both (or set `PMD_ENABLED=false` in its `.env`). Its AI reviewer is off unless its `.env` has `LLM_ENABLED=true`; without it, every file gets only its linter (Ruff, ESLint or PMD) and the secret scan.
 
    ```bash
    cd ../code-review-backend && npm run dev

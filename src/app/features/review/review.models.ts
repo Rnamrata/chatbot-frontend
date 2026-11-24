@@ -10,7 +10,7 @@ export interface Finding {
   severity: Severity | string;
   message: string;
   category?: string;
-  /** Which check found it: 'ruff', 'eslint', 'secrets' or 'llm'. */
+  /** Which check found it: 'ruff', 'eslint', 'pmd', 'secrets' or 'llm'. */
   source?: string;
   suggestion?: string;
   /** Why this kind of problem matters, matched by the review service; not every finding has one. */
@@ -120,6 +120,8 @@ export function analyzersFor(language: string | null): { linter: string | null; 
   switch (language) {
     case 'python':
       return { linter: 'Ruff', source: 'ruff' };
+    case 'java':
+      return { linter: 'PMD', source: 'pmd' };
     case 'js':
     case 'ts':
       return { linter: 'ESLint', source: 'eslint' };
@@ -137,6 +139,7 @@ export function toneOf(severity: string): Tone {
 const SOURCE_LABELS: Record<string, string> = {
   llm: 'AI reviewer',
   ruff: 'Ruff',
+  pmd: 'PMD',
   eslint: 'ESLint',
   secrets: 'Secret scan',
   orchestrator: 'Review service',
