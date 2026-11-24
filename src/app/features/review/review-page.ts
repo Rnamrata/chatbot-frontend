@@ -105,7 +105,7 @@ export class ReviewPage {
     const ran: string[] = [];
     const skipped: string[] = [];
     if (linter) (warned.has(source) ? skipped : ran).push(linter);
-    const aiRan = !warned.has('llm') && (review.language === 'java' || review.findings.some((f) => f.source === 'llm'));
+    const aiRan = !warned.has('llm') && review.findings.some((f) => f.source === 'llm');
     if (warned.has('llm')) skipped.push('AI reviewer');
     else if (aiRan) ran.push('AI reviewer');
     return { ran, skipped };
@@ -121,7 +121,6 @@ export class ReviewPage {
     const { ran, skipped } = this.checks();
     const parts = [lines, ran.length ? `checked by ${ran.join(' + ')}` : 'no checks ran'];
     if (skipped.length) parts.push(`${skipped.join(' and ')} skipped`);
-    if (review.language === 'java' && ran.length) parts[1] += ' (Java has no linter here)';
     return parts.join(' · ');
   });
 

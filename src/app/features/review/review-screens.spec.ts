@@ -101,6 +101,22 @@ describe('ReviewPage', () => {
     expect(TestBed.inject(PageHeaderService).subtitle()).toBe('Python');
   });
 
+  it('names PMD for a Java review, and the AI reviewer only when it reported something', async () => {
+    const java: Review = {
+      ...REVIEW,
+      filename: 'UserDao.java',
+      language: 'java',
+      code: 'class UserDao {\n  boolean admin(String r) { return r == "admin"; }\n}\n',
+      findings: [{ file: 'UserDao.java', line: 2, severity: 'medium', message: "Use equals() to compare strings (UseEqualsToCompareStrings)", category: 'bug', source: 'pmd' }],
+      summary: '1 issue found: 1 medium.',
+    };
+    const { el } = await render(java);
+
+    expect(el.querySelector('app-code-viewer .bar')?.textContent).toContain('checked by PMD');
+    expect(el.querySelector('app-code-viewer .bar')?.textContent).not.toContain('AI reviewer');
+    expect(el.querySelector('app-finding-list .where')?.textContent).toBe('Line 2 · bug · PMD');
+  });
+
   it('filters findings by severity', async () => {
     const { fixture, el } = await render();
 
