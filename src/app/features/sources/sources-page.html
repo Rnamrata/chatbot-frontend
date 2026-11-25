@@ -59,6 +59,9 @@
         (toggle)="toggle($event)"
         (toggleAll)="toggleAll()"
         (remove)="lib.remove([$event])"
+        [overviews]="lib.overviews()"
+        (openOverview)="lib.openOverview($event)"
+        (summarize)="lib.summarize($event)"
       />
 
       @if (hasLegacy()) {

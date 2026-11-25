@@ -67,7 +67,13 @@
             @case ('pending') {
               <p class="thinking">
                 <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
-                {{ pendingText() }}
+                @if (m.waitingFor?.length) {
+                  Waiting for {{ m.waitingFor.join(', ') }} to be added · reading…
+                } @else if (m.progress) {
+                  Summarizing {{ m.progress.source }} · {{ elapsed(m.progress.since) }}
+                } @else {
+                  {{ pendingText() }}
+                }
               </p>
             }
             @case ('error') {

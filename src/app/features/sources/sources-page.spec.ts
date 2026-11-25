@@ -105,6 +105,57 @@ describe('SourcesPage', () => {
     expect(put.request.body).toEqual({ source_ids: ['pe', 'trust'] });
   });
 
+  describe('overviews', () => {
+    const withOverviews: LibrarySource[] = [
+      { ...SOURCES[0], overview: 'ready' },
+      { ...SOURCES[1], overview: null },
+      { ...SOURCES[2], overview: null },
+      { ...SOURCES[3], overview: null },
+    ];
+    const row = (el: HTMLElement, name: string) => byText(el, 'tbody tr', name);
+
+    it('opens a ready overview under its row', async () => {
+      const { fixture, el } = await render(withOverviews);
+
+      byText(row(el, 'Prompt_Engineering.pdf'), 'button', 'Summary').click();
+      http.expectOne(`${API}/sources/pe/overview`).flush({ success: true, id: 'pe', status: 'ready', text: 'A book about prompts.\n\n- Context', built_at: null, error: null });
+      await fixture.whenStable();
+
+      const shown = el.querySelector('.overview-row');
+      expect(shown?.textContent).toContain('A book about prompts.');
+      expect(shown?.querySelector('li')?.textContent).toBe('Context');
+      expect(byText(row(el, 'Prompt_Engineering.pdf'), 'button', 'Summary').getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('summarizes a source that has none yet, and says so while it is written', async () => {
+      const { fixture, el } = await render(withOverviews);
+
+      byText(row(el, 'The trust inversion'), 'button', 'Summarize').click();
+      http.expectOne({ method: 'POST', url: `${API}/sources/trust/overview` }).flush({ success: true, id: 'trust', status: 'building' }, { status: 202, statusText: 'Accepted' });
+      await fixture.whenStable();
+
+      expect(row(el, 'The trust inversion').textContent).toContain('Summarizing…');
+    });
+
+    it('offers to try again when summarizing failed', async () => {
+      const { fixture, el } = await render([{ ...SOURCES[1], overview: 'failed' }]);
+      expect(row(el, 'The trust inversion').textContent).toContain("Couldn't summarize");
+
+      byText(row(el, 'The trust inversion'), 'button', 'Try again').click();
+      await fixture.whenStable();
+
+      http.expectOne({ method: 'POST', url: `${API}/sources/trust/overview` });
+    });
+
+    it('offers nothing for sources still being added or older data', async () => {
+      const { el } = await render(withOverviews);
+
+      for (const name of ['MX Master 4', 'Older data without details']) {
+        expect(row(el, name).querySelector('.overview')).toBeNull();
+      }
+    });
+  });
+
   it('points to the chat when there are no sources yet', async () => {
     const { el } = await render([]);
 

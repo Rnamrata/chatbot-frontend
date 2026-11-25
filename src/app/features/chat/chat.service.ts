@@ -1,11 +1,12 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, Signal, WritableSignal, inject, signal } from '@angular/core';
-import { TimeoutError, timeout } from 'rxjs';
+import { Subject, Subscription, TimeoutError, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../core/api';
 import { ActivityService } from '../../core/activity.service';
 import { explainAddError } from '../sources/add-errors';
 import { SourcesService } from '../sources/sources.service';
 import {
+  ChatProgress,
   ChatResponse,
   ConversationState,
   FileUpload,
@@ -37,6 +38,8 @@ interface Entry {
   uploads: WritableSignal<FileUpload[]>;
   view: Conversation;
   reviewId?: string;
+  /** Questions sent while files were still being added: asked once none is. */
+  waiting: { messageId: string; question: string }[];
 }
 
 export interface SendOptions {
@@ -47,6 +50,9 @@ export interface SendOptions {
 
 /** Ollama on a laptop can be slow, especially on the first question while the model loads. */
 const ANSWER_TIMEOUT_MS = 180_000;
+/** While a document answer is pending, how soon and how often to ask what it waits on. */
+const PROGRESS_FIRST_MS = 1_500;
+const PROGRESS_EVERY_MS = 2_000;
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -114,12 +120,14 @@ export class ChatService {
         c.uploads.update((list) => list.filter((u) => u.id !== upload.id));
         if (source) this.joined(sessionId, source.id);
         this.activity.changed();
+        this.askWaiting(c, sessionId);
       },
       error: (err) => {
         const why = explainAddError('file', err);
         c.uploads.update((list) =>
           list.map((u) => (u.id === upload.id ? { ...u, status: 'failed', error: why.message, detail: why.detail } : u)),
         );
+        this.askWaiting(c, sessionId);
       },
     });
   }
@@ -179,9 +187,29 @@ export class ChatService {
       return;
     }
 
-    const answer = message('assistant', '', { status: 'pending', question });
+    const adding = c.uploads().filter((u) => u.status === 'adding').map((u) => u.name);
+    const answer = message('assistant', '', { status: 'pending', question, ...(adding.length ? { waitingFor: adding } : {}) });
     c.messages.update((list) => [...list, message('user', question, { at: new Date() }), answer]);
+    if (adding.length) {
+      // A file added just before ("summarize this") must be in the chat before the question is asked
+      c.waiting.push({ messageId: answer.id, question });
+      return;
+    }
     this.ask(c, sessionId, answer.id, question);
+  }
+
+  /** Asks the questions that waited for files, once no file is still being added. */
+  private askWaiting(c: Entry, sessionId: string): void {
+    const adding = c.uploads().filter((u) => u.status === 'adding').map((u) => u.name);
+    if (adding.length) {
+      for (const w of c.waiting) patch(c, w.messageId, { waitingFor: adding });
+      return;
+    }
+    const waiting = c.waiting.splice(0);
+    for (const w of waiting) {
+      patch(c, w.messageId, { waitingFor: undefined });
+      this.ask(c, sessionId, w.messageId, w.question);
+    }
   }
 
   /** Tries again to add a link that failed, then asks its question. */
@@ -243,6 +271,12 @@ export class ChatService {
   }
 
   private ask(c: Entry, sessionId: string, messageId: string, question: string): void {
+    const settled = new Subject<void>();
+    const settle = () => {
+      settled.next();
+      settled.complete();
+    };
+    if (!c.reviewId) this.watchProgress(c, sessionId, messageId, settled);
     this.http
       .post<ChatResponse>(`${this.baseUrl}/chat`, {
         question,
@@ -252,6 +286,7 @@ export class ChatService {
       .pipe(timeout(ANSWER_TIMEOUT_MS))
       .subscribe({
         next: (res) => {
+          settle();
           if (!res.success) {
             patch(c, messageId, {
               status: 'error',
@@ -262,6 +297,7 @@ export class ChatService {
           if (res.source_ids) c.sourceIds.set(res.source_ids);
           patch(c, messageId, {
             status: 'done',
+            progress: undefined,
             text: res.answer,
             at: new Date(),
             sources: toSources(res.sources),
@@ -269,8 +305,44 @@ export class ChatService {
           });
           this.activity.changed(); // History and Recent show the new chat or its new preview
         },
-        error: (err) => patch(c, messageId, { status: 'error', error: errorText(err) }),
+        error: (err) => {
+          settle();
+          patch(c, messageId, { status: 'error', error: errorText(err) });
+        },
       });
+  }
+
+  /**
+   * "Summarizing book.pdf · 0:40": asks the server what a pending answer waits on, one request
+   * at a time (the next one 2 s after the last answer), until the answer settles.
+   */
+  private watchProgress(c: Entry, sessionId: string, messageId: string, settled: Subject<void>): void {
+    let stopped = false;
+    let wait: ReturnType<typeof setTimeout> | undefined;
+    let request: Subscription | undefined;
+    const next = (ms: number) => {
+      wait = setTimeout(() => {
+        request = this.http.get<ChatProgress>(`${this.baseUrl}/chat/progress/${sessionId}`).subscribe({
+          next: (p) => {
+            if (stopped) return;
+            const since = p.since ? Date.parse(p.since) : NaN;
+            patch(c, messageId, {
+              progress: p.stage === 'summarizing' && p.source ? { source: p.source, since: Number.isNaN(since) ? Date.now() : since } : undefined,
+            });
+            next(PROGRESS_EVERY_MS);
+          },
+          error: () => {
+            if (!stopped) next(PROGRESS_EVERY_MS); // a failed check only means no progress text this time
+          },
+        });
+      }, ms);
+    };
+    settled.subscribe(() => {
+      stopped = true;
+      clearTimeout(wait);
+      request?.unsubscribe();
+    });
+    next(PROGRESS_FIRST_MS);
   }
 
   private entry(sessionId: string): Entry {
@@ -287,6 +359,7 @@ export class ChatService {
         sourceIds,
         sourcesError,
         uploads,
+        waiting: [],
         view: {
           messages: messages.asReadonly(),
           state: state.asReadonly(),

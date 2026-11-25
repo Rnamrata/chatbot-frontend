@@ -47,6 +47,10 @@ export interface Message {
   error?: string;
   /** User only: a link in the question that is being added as a source first. */
   link?: LinkSource;
+  /** Assistant only: files still being added; the question is asked once they are in. */
+  waitingFor?: string[];
+  /** Assistant only, while pending: the source whose overview the answer waits for. */
+  progress?: { source: string; since: number };
 }
 
 /** idle: not loaded yet · missing: Flask doesn't know this session (deleted, or from before it saved chats). */
@@ -61,6 +65,13 @@ export interface RawSource {
 }
 
 /** POST /chat. A failed answer still comes back as HTTP 200 with success: false. */
+/** GET /chat/progress/:id — what a pending question waits on. */
+export interface ChatProgress {
+  stage: 'summarizing' | null;
+  source: string | null;
+  since: string | null;
+}
+
 export interface ChatResponse {
   success: boolean;
   answer: string;

@@ -40,6 +40,43 @@ describe('ChatPage', () => {
     });
   });
 
+  it('says which source is being summarized while an answer waits for its overview', async () => {
+    const { fixture, el } = await render();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    typeInto(el.querySelector('textarea')!, 'Summarize this');
+    await fixture.whenStable();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] });
+    try {
+      const settle = async (ms: number) => {
+        await vi.advanceTimersByTimeAsync(ms);
+        fixture.detectChanges();
+      };
+      byText(el, 'button', 'Send').click();
+      const id = (navigate.mock.calls[0][0] as string[])[1];
+      fixture.componentRef.setInput('sessionId', id);
+      const chat = http.expectOne(`${API}/chat`);
+
+      await settle(1600);
+      const since = new Date().toISOString();
+      http.expectOne(`${API}/chat/progress/${id}`).flush({ success: true, stage: 'summarizing', source: 'book.pdf', since });
+      await settle(5000);
+      for (const r of http.match(`${API}/chat/progress/${id}`)) {
+        if (!r.cancelled) r.flush({ success: true, stage: 'summarizing', source: 'book.pdf', since });
+      }
+      await settle(0);
+      expect(el.querySelector('.thinking')?.textContent).toContain('Summarizing book.pdf · 0:05');
+
+      chat.flush({ success: true, answer: 'An overview.', sources: [], session_id: id });
+      const before = http.match(`${API}/chat/progress/${id}`);
+      expect(before.every((r) => r.cancelled)).toBe(true); // the check in flight is dropped
+      await settle(10_000);
+      http.expectNone(`${API}/chat/progress/${id}`); // and no new ones are made
+      expect(el.querySelector('.thinking')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('offers starter questions once there are sources', async () => {
     const { fixture, el } = await render();
 

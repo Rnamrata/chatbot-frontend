@@ -230,3 +230,35 @@ button {
     margin-top: 8px;
   }
 }
+/* ---------- overview ---------- */
+.overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 2px;
+  font-size: 13px;
+}
+.overview .link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.overview .busy,
+.overview-row .busy {
+  color: var(--muted);
+}
+.overview .failed {
+  color: var(--danger);
+}
+.overview-row td {
+  padding-top: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink-2);
+}

@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, finalize, map } from 'rxjs';
 import { API_BASE_URL } from '../../core/api';
-import { AddKind, LibrarySource, SourcesResponse, UploadResponse } from './sources.models';
+import { AddKind, LibrarySource, SourceOverview, SourcesResponse, UploadResponse } from './sources.models';
 
 const UPLOAD_PATH: Record<AddKind, string> = {
   file: '/upload/file',
@@ -28,6 +28,8 @@ export class SourcesService {
   /** Ids of the sources being deleted. */
   readonly removing = signal<string[]>([]);
   readonly removeError = signal<string | null>(null);
+  /** Overview texts opened in the library, by source id. */
+  readonly overviews = signal<Record<string, string>>({});
 
   load(): void {
     if (this.loadState() !== 'ready') this.loadState.set('loading'); // keep the table during refreshes
@@ -82,9 +84,33 @@ export class SourcesService {
     }
   }
 
+  /** Loads a source's overview text, for the library to show under its row. */
+  openOverview(id: string): void {
+    this.http.get<SourceOverview>(`${this.baseUrl}/sources/${encodeURIComponent(id)}/overview`).subscribe({
+      next: (res) => {
+        if (res.status === 'ready' && res.text) this.overviews.update((all) => ({ ...all, [id]: res.text! }));
+        else this.markOverview(id, res.status);
+      },
+      error: () => undefined, // the row keeps its button; opening it again tries again
+    });
+  }
+
+  /** Writes (or writes again) a source's overview; the list shows "Summarizing…" until it is done. */
+  summarize(id: string): void {
+    this.markOverview(id, 'building');
+    this.http.post(`${this.baseUrl}/sources/${encodeURIComponent(id)}/overview`, {}).subscribe({
+      next: () => this.schedulePoll(),
+      error: () => this.markOverview(id, 'failed'),
+    });
+  }
+
+  private markOverview(id: string, overview: LibrarySource['overview']): void {
+    this.sources.update((list) => list.map((s) => (s.id === id ? { ...s, overview } : s)));
+  }
+
   private schedulePoll(): void {
     clearTimeout(this.pollTimer);
-    if (this.sources().some((s) => s.status === 'processing')) {
+    if (this.sources().some((s) => s.status === 'processing' || s.overview === 'building')) {
       this.pollTimer = setTimeout(() => this.load(), POLL_MS);
     }
   }

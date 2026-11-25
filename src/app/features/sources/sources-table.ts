@@ -1,4 +1,5 @@
 import { Component, computed, input, output, signal } from '@angular/core';
+import { MarkdownAnswer } from '../chat/markdown-answer';
 import { Icon } from '../../shared/icon';
 import { addedLabel, typeLabel } from './source-checks';
 import { LibrarySource } from './sources.models';
@@ -6,7 +7,7 @@ import { LibrarySource } from './sources.models';
 /** The library: one row per source, with a checkbox to choose sources for a chat. */
 @Component({
   selector: 'app-sources-table',
-  imports: [Icon],
+  imports: [Icon, MarkdownAnswer],
   templateUrl: './sources-table.html',
   styleUrl: './sources-table.css',
 })
@@ -20,6 +21,13 @@ export class SourcesTable {
   readonly toggle = output<string>();
   readonly toggleAll = output<void>();
   readonly remove = output<string>();
+  /** Overview texts loaded so far, by source id. */
+  readonly overviews = input<Record<string, string>>({});
+  readonly openOverview = output<string>();
+  readonly summarize = output<string>();
+
+  /** The row whose overview is open under it. */
+  protected readonly openRow = signal<string | null>(null);
 
   /** Row asking "Delete …?" before anything is deleted. */
   protected readonly confirming = signal<string | null>(null);
@@ -32,6 +40,12 @@ export class SourcesTable {
   protected readonly someSelected = computed(
     () => !this.allSelected() && this.selectable().some((s) => this.selected().includes(s.id)),
   );
+
+  protected toggleOverview(id: string): void {
+    const opening = this.openRow() !== id;
+    this.openRow.set(opening ? id : null);
+    if (opening && !this.overviews()[id]) this.openOverview.emit(id);
+  }
 
   protected isSelected(id: string): boolean {
     return this.selected().includes(id);

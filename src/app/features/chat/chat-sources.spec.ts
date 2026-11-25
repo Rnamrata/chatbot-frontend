@@ -202,6 +202,51 @@ describe('ChatPage with sources', () => {
     expect(el.querySelector('app-chat-sources-bar [role=alert]')?.textContent).toContain('Lens found no text in this file');
   });
 
+  function dropFiles(fixture: { nativeElement: HTMLElement }, ...names: string[]) {
+    const drop = new Event('drop', { bubbles: true }) as DragEvent;
+    Object.defineProperty(drop, 'dataTransfer', { value: { types: ['Files'], files: names.map((n) => new File(['x'], n)) } });
+    fixture.nativeElement.dispatchEvent(drop);
+  }
+
+  it('asks a question sent while a file is being added once the file is in', async () => {
+    const { fixture, el, newId, arrive } = await render();
+    dropFiles(fixture, 'book.pdf');
+    await arrive();
+    const upload = http.expectOne(`${API}/upload/file`);
+
+    typeInto(el.querySelector('textarea')!, 'Summarize this');
+    await fixture.whenStable();
+    byText(el, 'button', 'Send').click();
+    await fixture.whenStable();
+
+    http.expectNone(`${API}/chat`);
+    expect(el.querySelector('.thinking')?.textContent).toContain('Waiting for book.pdf to be added · reading…');
+
+    upload.flush({ success: true, source: { ...LIBRARY[0], id: 'bk', name: 'book.pdf' } });
+    await fixture.whenStable();
+    expect(http.expectOne(`${API}/chat`).request.body).toEqual({ question: 'Summarize this', session_id: newId() });
+  });
+
+  it('does not hold a question back for an upload that failed', async () => {
+    const { fixture, el, arrive } = await render();
+    dropFiles(fixture, 'a.pdf', 'b.pdf');
+    await arrive();
+    const [a, b] = http.match(`${API}/upload/file`);
+    b.flush({ success: false, error: 'No content extracted from file' }, { status: 400, statusText: 'Bad Request' });
+    await fixture.whenStable();
+
+    typeInto(el.querySelector('textarea')!, 'Summarize this');
+    await fixture.whenStable();
+    byText(el, 'button', 'Send').click();
+    await fixture.whenStable();
+    expect(el.querySelector('.thinking')?.textContent).toContain('Waiting for a.pdf to be added');
+    expect(el.querySelector('.thinking')?.textContent).not.toContain('b.pdf');
+
+    a.flush({ success: true, source: { ...LIBRARY[0], id: 'a', name: 'a.pdf' } });
+    await fixture.whenStable();
+    expect(http.match(`${API}/chat`)).toHaveLength(1);
+  });
+
   it('keeps a link as text when asked to', async () => {
     const { fixture, el, newId } = await render();
     typeInto(el.querySelector('textarea')!, 'Is https://example.com a good site?');
