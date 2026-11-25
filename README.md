@@ -40,7 +40,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 ## Prerequisites
 
 - **Node.js 24 (LTS).** Angular 22 supports Node 22, 24 and 26+. Odd-numbered versions such as 25 print `EBADENGINE` warnings. With nvm: `nvm install 24 && nvm alias default 24`.
-- **Ollama** with the three models Lens uses: `llama3.2` for document answers, `qwen2.5-coder:7b` for code reviews and Ask Lens, and `nomic-embed-text` for search:
+- **Ollama** with the three models Lens uses: `llama3.2` for document answers (or another model set in llm-chatbot's `LLM_MODEL`, such as `gemma3:4b`), `qwen2.5-coder:7b` for code reviews and Ask Lens, and `nomic-embed-text` for search:
 
   ```bash
   ollama pull llama3.2
@@ -139,7 +139,7 @@ src/app/
   layout/     App shell, sidebar, mode switch, theme toggle, connection status card
   features/
     chat/     Document Q&A: page, service, messages, markdown answers, sources, composer, welcome, the chat's sources (chips, + dialog)
-    sources/  Sources library: page, service, table, file and link checks, explanations for failed adds
+    sources/  Sources library: page, service, table (with each source's overview), file and link checks, explanations for failed adds
     review/   Code review: start screen, review page, code viewer, findings, severity filter, Ask Lens, service
     history/  History: page, service, date groups, search, pin and delete; also feeds the sidebar's Recent
   testing/    Test helpers: a fake connection status, typing into fields, finding buttons by text
@@ -179,3 +179,4 @@ Some of these come from what llm-chatbot returns today, others from Lens keeping
 - **Reviews in progress live in the tab.** "Stop waiting" only stops the screen; llm-chatbot still finishes and stores the review. If you leave the page before it finishes, open it from History or Recent once it's done.
 - **"Run the review again"** only works in the tab where the file was chosen, because the browser keeps the file in memory.
 - **Reviews stored before llm-chatbot PR #7** have no category, source or suggestion on their findings, so those details don't show. Reviews stored before llm-chatbot PR #16 have no "Why it matters" or source.
+- **Sources added before overviews existed** (llm-chatbot PR #18) have none until someone asks for a summary in a chat or clicks **Summarize** in the Sources library; it takes about 5–20 seconds.
