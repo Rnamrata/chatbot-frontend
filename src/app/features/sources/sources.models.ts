@@ -13,6 +13,18 @@ export interface LibrarySource {
   chunks: number;
   status: SourceStatus;
   added_at: string | null;
+  /** Its overview ("summarize this"): null when it has none yet. Older servers leave it out. */
+  overview?: OverviewStatus | null;
+}
+
+export type OverviewStatus = 'ready' | 'building' | 'failed';
+
+/** GET /sources/:id/overview. */
+export interface SourceOverview {
+  status: OverviewStatus | null;
+  text: string | null;
+  built_at: string | null;
+  error: string | null;
 }
 
 export interface SourcesResponse {

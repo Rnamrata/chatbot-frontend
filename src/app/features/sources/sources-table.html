@@ -35,6 +35,27 @@
           <td class="name">
             <label class="title" [for]="'src-' + s.id" [title]="s.name">{{ s.name }}</label>
             <span class="detail">{{ detail(s) }}</span>
+            @if (s.status === 'ready' && s.overview !== undefined) {
+              <span class="overview">
+                @switch (s.overview) {
+                  @case ('ready') {
+                    <button type="button" class="link" [attr.aria-expanded]="openRow() === s.id" (click)="toggleOverview(s.id)">
+                      Summary
+                    </button>
+                  }
+                  @case ('building') {
+                    <span class="busy">Summarizing…</span>
+                  }
+                  @case ('failed') {
+                    <span class="failed">Couldn't summarize</span>
+                    <button type="button" class="link" (click)="summarize.emit(s.id)">Try again</button>
+                  }
+                  @default {
+                    <button type="button" class="link" (click)="summarize.emit(s.id)">Summarize</button>
+                  }
+                }
+              </span>
+            }
           </td>
           <td class="type">{{ type(s) }}</td>
           <td class="added">{{ added(s) }}</td>
@@ -62,6 +83,18 @@
             }
           </td>
         </tr>
+        @if (openRow() === s.id && s.overview === 'ready') {
+          <tr class="overview-row">
+            <td></td>
+            <td colspan="5">
+              @if (overviews()[s.id]; as text) {
+                <app-markdown-answer [text]="text" />
+              } @else {
+                <span class="busy">Loading the summary…</span>
+              }
+            </td>
+          </tr>
+        }
       } @empty {
         <tr class="none">
           <td colspan="6">No sources match your search.</td>

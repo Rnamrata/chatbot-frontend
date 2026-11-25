@@ -34,6 +34,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
 | 7. Testing | Component tests for every screen, smoke test against llm-chatbot, the review service and Ollama | Done |
 | 8. Sources in the chat | A chat's own sources ("Answering from" chips, the + dialog, links added on send, files dropped on the chat), Sources as a library (search, select, start a chat with these, delete), plain explanations when adding fails, AI findings marked as needing a check, Code Review always opens a new review | Done |
 | 9. Explain why | An opened finding shows why it matters and a source to read (the card's fix stands in when the check gave no suggestion); Ask Lens answers end with that source; links in answers open in a new tab | Done |
+| 10. Source overviews | "Summarize this" answers at once from an overview of each source (what it is, then its key topics), written in the background when the source is added; a question sent while a file is still being added waits for it; "Summarizing *book.pdf* · 0:12" while an overview is still being written; the Sources library shows each overview, or offers to write one | Done |
 
 
 ## Prerequisites
@@ -53,7 +54,7 @@ The browser only ever calls Flask; Flask forwards reviews to the Node service.
   ollama pull nomic-embed-text
   ```
 
-- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (llm-chatbot PR #6), and Code Review needs the full review details and refusal handling (llm-chatbot PR #7), and History needs saved sessions (llm-chatbot PR #8). A chat's own sources need llm-chatbot PR #14, and "Why it matters" on findings needs llm-chatbot PR #16 with code-review-backend PR #27. All of these are in each project's `master`.
+- **llm-chatbot** and **code-review-backend** cloned and installed, following their READMEs. The Sources screen needs an llm-chatbot version with the `/sources` endpoints (llm-chatbot PR #6), and Code Review needs the full review details and refusal handling (llm-chatbot PR #7), and History needs saved sessions (llm-chatbot PR #8). A chat's own sources need llm-chatbot PR #14, "Why it matters" on findings needs llm-chatbot PR #16 with code-review-backend PR #27, and source overviews need the llm-chatbot version that adds them (its `/sources/{id}/overview` and `/chat/progress` endpoints). All of these are in each project's `master`.
 
 ## Running everything
 
@@ -106,8 +107,8 @@ Lens must run on port 4200: llm-chatbot only accepts requests from `http://local
 **Component and service tests** (`npx ng test --watch=false`) need no servers. Each screen is rendered with Angular's `TestBed`, with HTTP answered by `HttpTestingController` and the connection status faked (`src/app/testing/test-helpers.ts`). They cover:
 
 - Chat: the composer (Enter, Shift + Enter, when Send is off), the message list (sources, passages, pending and failed answers), the page (first question, starter questions, no sources, Ollama down)
-- A chat's sources: the "Answering from" chips, the + dialog (choosing, searching, uploading), a pasted link added before its question, a link that fails and is tried again, a link kept as text, files dropped on the chat
-- Sources: the library (search, select, select all, start a chat with these, delete after asking, empty state), file and link checks, plain explanations for failed adds
+- A chat's sources: the "Answering from" chips, the + dialog (choosing, searching, uploading), a pasted link added before its question, a link that fails and is tried again, a link kept as text, files dropped on the chat, a question that waits for a file still being added (and not for one that failed), "Summarizing …" while an overview is written
+- Sources: the library (search, select, select all, start a chat with these, delete after asking, empty state), each source's overview (open it, write one, try again), file and link checks, plain explanations for failed adds
 - Code review: the start screen (unsupported files, upload, service down), the review page (summary, filter, findings, Ask Lens, partial and missing reviews), findings marked as from the AI reviewer, "Why it matters" with its source link, the code viewer, severity filter and warning banner
 - Answers: markdown and code blocks, links that open in a new tab
 - History: groups, search, filters, pin, delete, clear old chats, empty state, the full title on a shortened one

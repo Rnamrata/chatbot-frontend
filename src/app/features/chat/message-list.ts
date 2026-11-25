@@ -41,7 +41,7 @@ export class MessageList {
   constructor() {
     let timer: ReturnType<typeof setInterval> | undefined;
     effect(() => {
-      const adding = this.messages().some((m) => m.link?.status === 'adding');
+      const adding = this.messages().some((m) => m.link?.status === 'adding' || (m.status === 'pending' && m.progress));
       if (adding && !timer) {
         timer = setInterval(() => this.now.set(Date.now()), 1000);
       } else if (!adding && timer) {
